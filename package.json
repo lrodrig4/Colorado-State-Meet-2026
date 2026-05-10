@@ -1,0 +1,37 @@
+{
+  "name": "colorado-distance-qualifier-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "rank": "tsx scripts/print-ranking.ts",
+    "deploy:prod": "npx vercel deploy --prod --yes",
+    "seed:milesplit-browser": "tsx scripts/import-milesplit-browser-rankings.ts",
+    "seed:maxpreps-4a": "MAXPREPS_CLASSIFICATION=4A tsx scripts/import-maxpreps-5a-rankings.ts",
+    "seed:maxpreps-5a": "tsx scripts/import-maxpreps-5a-rankings.ts",
+    "seed:maxpreps-3a": "MAXPREPS_CLASSIFICATION=3A tsx scripts/import-maxpreps-5a-rankings.ts",
+    "audit:3a": "AUDIT_CLASSIFICATION=3A tsx scripts/audit-class-verification.ts",
+    "test": "tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "lucide-react": "1.14.0",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^20.19.39",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4.2.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

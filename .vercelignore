@@ -1,0 +1,11 @@
+.next
+.next*
+node_modules
+node_modules.broken.*
+.playwright-mcp
+.tmp-historical
+*.png
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env*

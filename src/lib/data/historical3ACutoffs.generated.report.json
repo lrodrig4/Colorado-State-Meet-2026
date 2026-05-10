@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-05-03T21:52:49.729584+00:00",
+  "rowCount": 251,
+  "warnings": [
+    {
+      "year": 2021,
+      "classification": "3A",
+      "gender": "Boys",
+      "event": "Long Jump",
+      "notes": "Missing from PDF text extraction."
+    },
+    {
+      "year": 2021,
+      "gender": "Boys",
+      "event": "200m",
+      "markRaw": "23.23",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Michael Bias 12 Sierra 23.23 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Boys",
+      "event": "1600m",
+      "markRaw": "4:42.60",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Gabe Heraty 12 Pagosa Spgs. 4:42.60 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Boys",
+      "event": "300m Hurdles",
+      "markRaw": "43.07",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Chase Smith 11 Alamosa 43.07 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Girls",
+      "event": "3200m",
+      "markRaw": "12:11.31",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Ella Howe 9 Resurrection Chr 12:11.31 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Girls",
+      "event": "Pole Vault",
+      "markRaw": "7-06.00",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Sage Allen 11 Rifle 7-06.00 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Girls",
+      "event": "Shot Put",
+      "markRaw": "31-01.50",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Jaylin Springer 10 La Junta 31-01.50 _________"
+    },
+    {
+      "year": 2025,
+      "gender": "Boys",
+      "event": "Pole Vault",
+      "markRaw": "11-07.00",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "1 Zachary Hufnagel 11 Bayfield 11-07.00 _________"
+    }
+  ]
+}

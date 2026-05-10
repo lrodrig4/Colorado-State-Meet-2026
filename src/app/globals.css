@@ -1,0 +1,118 @@
+@import "tailwindcss" source(none);
+@source "../**/*.{ts,tsx}";
+
+:root {
+  --background: #f5f7f6;
+  --foreground: #0b1320;
+  --coach-ink: #0b1320;
+  --coach-muted: #5c6b7d;
+  --coach-line: #d7e0e7;
+  --coach-navy: #102b47;
+  --coach-green: #2f6f5e;
+  --coach-gold: #d99a2b;
+  --coach-surface: #ffffff;
+  --coach-soft: #eef4f2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background:
+    radial-gradient(circle at 18% -8%, rgba(47, 111, 94, 0.08), transparent 30rem),
+    linear-gradient(90deg, rgba(16, 43, 71, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0, rgba(245, 247, 246, 0) 18rem),
+    var(--background);
+  background-size: auto, 72px 100%, auto, auto;
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: var(--coach-green);
+  color: white;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+.coach-surface {
+  border: 1px solid var(--coach-line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 1)),
+    var(--coach-surface);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 18px 44px rgba(15, 23, 42, 0.05);
+}
+
+.coach-panel {
+  border: 1px solid var(--coach-line);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.coach-rail {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(251, 253, 252, 0.98)),
+    linear-gradient(90deg, rgba(16, 43, 71, 0.04) 1px, transparent 1px);
+  background-size: auto, 42px 100%;
+}
+
+.coach-kicker {
+  color: var(--coach-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.coach-action {
+  min-height: 2.75rem;
+  border-radius: 0.625rem;
+  font-weight: 700;
+}
+
+.tap-row {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(47, 111, 94, 0.12);
+}
+
+@media (max-width: 768px) {
+  body {
+    background-size: auto, 48px 100%, auto, auto;
+  }
+
+  .coach-surface {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  }
+}

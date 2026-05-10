@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-05-03T21:13:52.515913+00:00",
+  "rowCount": 252,
+  "warnings": [
+    {
+      "year": 2018,
+      "gender": "Boys",
+      "event": "Triple Jump",
+      "markRaw": "43-03.75",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "__ 18 Mateo Mondragon 11 Lakewood 43-03.75 _________"
+    },
+    {
+      "year": 2019,
+      "gender": "Girls",
+      "event": "High Jump",
+      "markRaw": "5-02.00",
+      "parsedCount": 23,
+      "notes": "PDF text extraction returned 23 plausible entries; using sorted 18th mark.",
+      "debugLine": "__ 18 Alexandra Tafoya 11 Douglas Cty 5-02.00 _________"
+    },
+    {
+      "year": 2019,
+      "gender": "Girls",
+      "event": "Pole Vault",
+      "markRaw": "9-03.00",
+      "parsedCount": 23,
+      "notes": "PDF text extraction returned 23 plausible entries; using sorted 18th mark.",
+      "debugLine": "18 Susanna Penaloza 11 Arapahoe 9-03.00 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Boys",
+      "event": "Long Jump",
+      "markRaw": "21-00.00",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Nick Maguire 10 Fort Collins 21-00.00 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Boys",
+      "event": "Discus",
+      "markRaw": "131-09",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Tanner Redden 12 ValorChristian 131-09 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Girls",
+      "event": "100m Hurdles",
+      "markRaw": "16.57",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Riley Dodd 12 Fort Collins 16.57 _________"
+    },
+    {
+      "year": 2021,
+      "gender": "Girls",
+      "event": "Discus",
+      "markRaw": "103-03",
+      "parsedCount": 17,
+      "notes": "PDF text extraction returned 17 parsed accepted entries; using weakest parsed mark.",
+      "debugLine": "18 Keira Bennett 11 Chaparral 103-03 _________"
+    },
+    {
+      "year": 2022,
+      "gender": "Boys",
+      "event": "High Jump",
+      "markRaw": "6-00.00",
+      "parsedCount": 23,
+      "notes": "PDF text extraction returned 23 plausible entries; using sorted 18th mark.",
+      "debugLine": "3 William Toney 11 Fountain-Ft Crsn 6-00.00 _________"
+    },
+    {
+      "year": 2024,
+      "gender": "Girls",
+      "event": "High Jump",
+      "markRaw": "5-01.00",
+      "parsedCount": 27,
+      "notes": "PDF text extraction returned 27 plausible entries; using sorted 18th mark.",
+      "debugLine": "1 Anna Cobos 10 Fountain-Ft Crsn 5-01.00 _________"
+    },
+    {
+      "year": 2025,
+      "gender": "Girls",
+      "event": "High Jump",
+      "markRaw": "5-02.00",
+      "parsedCount": 26,
+      "notes": "PDF text extraction returned 26 plausible entries; using sorted 18th mark.",
+      "debugLine": "3 Paige Murdock 11 Pine Creek 5-02.00 _________"
+    }
+  ]
+}

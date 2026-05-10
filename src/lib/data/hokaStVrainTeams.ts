@@ -1,0 +1,166 @@
+import type { Gender } from "@/types/domain";
+import {
+  findSchoolByNameOrAlias,
+  normalizeSchoolLookupKey,
+} from "@/lib/data/schools";
+
+const hokaStVrainTeamNames = [
+  "Above the Bar Track Club",
+  "Air Academy High School",
+  "Akron High School",
+  "Arickaree-Woodlin",
+  "Arvada West High School",
+  "Aspen High School",
+  "Banning Lewis Preparatory Academy",
+  "Banning Lewis Ranch Academy",
+  "Battle Mountain High School",
+  "Bear Creek High School",
+  "Berthoud High School",
+  "Boulder High School",
+  "Brighton High School",
+  "Broomfield High School",
+  "Caliche High School",
+  "Castle View High School",
+  "Centaurus High School",
+  "Central Grand Junction High School",
+  "Chaparral High School",
+  "Chatfield Senior High School",
+  "Cherry Creek High School",
+  "Cheyenne East High School",
+  "Cheyenne Mountain High School",
+  "Columbine High School",
+  "Conifer High School",
+  "Coronado High School",
+  "D'Evelyn High School",
+  "Denver Academy",
+  "Denver Christian High School",
+  "Denver South High School",
+  "Denver West High School",
+  "Discovery Canyon High School",
+  "Douglas County High School",
+  "Durango High School",
+  "Eagle Valley High School",
+  "Eaton High School",
+  "Elizabeth High School",
+  "Erie High School",
+  "Estes Park High School",
+  "Fairview High School",
+  "Fleming High School",
+  "Forge Christian High School",
+  "Fort Collins High School",
+  "Fort Lupton High School",
+  "Fossil Ridge High School",
+  "Frederick High School",
+  "Frontier Academy",
+  "Fruita Monument High School",
+  "Golden High School",
+  "Golden View Classical Academy",
+  "Grand Junction High School",
+  "Greeley West High School",
+  "Green Mountain High School",
+  "Haxtun High School",
+  "Heritage Christian Academy",
+  "Heritage High School",
+  "Holy Family High School",
+  "Holyoke High School",
+  "Horizon High School",
+  "Idalia High School",
+  "Jefferson Academy",
+  "Kent Denver School",
+  "Lakewood High School",
+  "Legacy High School",
+  "Legend High School",
+  "Lewis-Palmer High School",
+  "Liberty Common High School",
+  "Littleton High School",
+  "Longmont High School",
+  "Loveland High School",
+  "Lutheran High School",
+  "Lyons High School",
+  "Manitou Springs High School",
+  "Mead High School",
+  "Merino High School",
+  "Mesa Ridge High School",
+  "Moffat County High School",
+  "Monarch High School",
+  "Mountain Range High School",
+  "Mountain View High School",
+  "Mountain Vista High School",
+  "Mullen High School",
+  "Niwot High School",
+  "Niwot (CO) High School",
+  "Northfield High School",
+  "Otis High School",
+  "Palisade High School",
+  "Palmer Ridge High School",
+  "Peak to Peak Charter School",
+  "Platte Canyon High School",
+  "Pomona High School",
+  "Poudre High School",
+  "Prairie High School",
+  "Prospect Ridge Academy",
+  "Ralston Valley High School",
+  "Rampart High School",
+  "Rangeview High School",
+  "Regis Jesuit",
+  "Resurrection Christian High School",
+  "Riverdale Ridge High School",
+  "Rock Canyon High School",
+  "Rocky Mountain High School",
+  "Roosevelt High School",
+  "Salida High School",
+  "Sedgwick County",
+  "Severance High School",
+  "Sierra High School",
+  "Silver Creek High School",
+  "SkyView Academy",
+  "Skyline High School",
+  "Soroco High School",
+  "Standley Lake High School",
+  "Stargate High School",
+  "Steamboat Springs High School",
+  "Summit High School",
+  "The Academy of Charter Schools",
+  "The Classical Academy",
+  "Thompson Valley High School",
+  "ThunderRidge High School",
+  "Timnath High School",
+  "Twin Peaks Charter Academy High School",
+  "Valley High School",
+  "Valor Christian High School",
+  "Vista Peak High School",
+  "Vista Ridge High School",
+  "Wellington Middle-High School",
+  "Wiggins High School",
+  "Windsor High School",
+  "Wray High School",
+];
+
+const hokaStVrainTeamLookupKeys = new Set<string>();
+
+for (const teamName of hokaStVrainTeamNames) {
+  hokaStVrainTeamLookupKeys.add(normalizeSchoolLookupKey(teamName));
+  const school = findSchoolByNameOrAlias(teamName);
+  if (school) {
+    hokaStVrainTeamLookupKeys.add(normalizeSchoolLookupKey(school.schoolName));
+    for (const alias of school.aliases) {
+      hokaStVrainTeamLookupKeys.add(normalizeSchoolLookupKey(alias));
+    }
+  }
+}
+
+export function isHokaStVrainAttendingSchool(
+  schoolName: string,
+  gender?: Gender,
+) {
+  const key = normalizeSchoolLookupKey(schoolName);
+  if (hokaStVrainTeamLookupKeys.has(key)) return true;
+
+  const school = findSchoolByNameOrAlias(schoolName, gender);
+  return school
+    ? hokaStVrainTeamLookupKeys.has(
+        normalizeSchoolLookupKey(school.schoolName),
+      )
+    : false;
+}
+

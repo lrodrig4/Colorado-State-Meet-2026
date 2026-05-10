@@ -36,6 +36,7 @@ __pycache__/
 /maxpreps-*-rankings.json
 /milesplit-*-browser-rankings.json
 /test-playwright-save.json
+/package-lock.json
 /reports/
 /.playwright-mcp/
 /.tmp-historical/

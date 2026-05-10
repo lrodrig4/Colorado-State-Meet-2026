@@ -28,12 +28,6 @@ npm run test
 npm run deploy:prod
 ```
 
-Print a ranking directly from the data layer:
-
-```bash
-npm run rank -- --class=4A --gender=Girls --event="4x800m Relay" --top=50
-```
-
 ## Data Refresh Commands
 
 These commands update generated data files. Do not store passwords, cookies, or tokens in the repo.

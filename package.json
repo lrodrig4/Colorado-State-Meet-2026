@@ -7,7 +7,6 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "rank": "tsx scripts/print-ranking.ts",
     "deploy:prod": "npx vercel deploy --prod --yes",
     "seed:milesplit-browser": "tsx scripts/import-milesplit-browser-rankings.ts",
     "seed:maxpreps-4a": "MAXPREPS_CLASSIFICATION=4A tsx scripts/import-maxpreps-5a-rankings.ts",

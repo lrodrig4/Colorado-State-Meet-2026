@@ -5,12 +5,7 @@
 1. Check MaxPreps, MileSplit Colorado, Rapid Results, and AthleticLIVE for new eligible results.
 2. Import generated source data where possible.
 3. Add manual correction files for verified result pages that are not reflected in public rankings yet.
-4. Run a targeted ranking print before deploying:
-
-```bash
-npm run rank -- --class=4A --gender=Girls --event="800m" --top=50
-```
-
+4. Check the affected ranking in the local app before deploying.
 5. Deploy only after the affected event list matches the verified source.
 
 ## Manual Correction Pattern

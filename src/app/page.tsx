@@ -428,6 +428,45 @@ export default async function Dashboard({
         latestMeetLabel={latestMeetLabel}
       />
 
+      <section className="mt-5 rounded-lg border border-[#d8e2ea] bg-white p-4 sm:p-5 shadow-sm">
+        <h2 className="flex items-center gap-2 text-lg font-semibold tracking-normal text-slate-950">
+          <Medal size={20} className="text-[#16324f]" />
+          Official State Qualifiers
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Download the official CHSAA state qualifying lists.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <a
+            href="/qualifiers/3a_state_quals_2026.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap-row flex items-center justify-between rounded-lg border border-[#cbd8e3] bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#0f8a5f] hover:bg-white hover:text-[#0f6f50]"
+          >
+            3A Qualifiers
+            <ArrowRight size={16} />
+          </a>
+          <a
+            href="/qualifiers/4a_state_quals_2026.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap-row flex items-center justify-between rounded-lg border border-[#cbd8e3] bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#0f8a5f] hover:bg-white hover:text-[#0f6f50]"
+          >
+            4A Qualifiers
+            <ArrowRight size={16} />
+          </a>
+          <a
+            href="/qualifiers/5a_state_quals_2026.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap-row flex items-center justify-between rounded-lg border border-[#cbd8e3] bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#0f8a5f] hover:bg-white hover:text-[#0f6f50]"
+          >
+            5A Qualifiers
+            <ArrowRight size={16} />
+          </a>
+        </div>
+      </section>
+
       <section className="mt-5 grid gap-3 lg:grid-cols-2">
         <Link
           href="/intel"

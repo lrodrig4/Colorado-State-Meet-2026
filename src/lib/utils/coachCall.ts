@@ -35,7 +35,7 @@ export function coachCall(row: LastChanceRecommendation): CoachCall {
       }
 
       if (state >= 72) {
-        return { label: "Defend relay", tone: "amber", urgent: true };
+        return { label: "Relay watch", tone: "amber", urgent: true };
       }
 
       return { label: "Relay at risk", tone: "rose", urgent: true };
@@ -51,14 +51,14 @@ export function coachCall(row: LastChanceRecommendation): CoachCall {
 
     if (state >= 78) {
       return {
-        label: "Defend",
+        label: "Watch",
         tone: "amber",
         urgent: true,
       };
     }
 
     if (state >= 68) {
-      return { label: "Defend hard", tone: "amber", urgent: true };
+      return { label: "At risk", tone: "amber", urgent: true };
     }
 
     return { label: "At risk", tone: "rose", urgent: true };

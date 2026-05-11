@@ -31,12 +31,9 @@
 *.gif
 
 # local raw scrape artifacts and debug output
-__pycache__/
-*.py[cod]
 /maxpreps-*-rankings.json
 /milesplit-*-browser-rankings.json
 /test-playwright-save.json
-/package-lock.json
 /reports/
 /.playwright-mcp/
 /.tmp-historical/

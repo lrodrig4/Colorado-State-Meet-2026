@@ -138,10 +138,26 @@ function eventNote(row: LastChanceRecommendation) {
   }
 
   if (row.rank <= 18) {
-    return `${row.scratchRiskLabel} scratch risk. ${row.scratchTradeoffExplanation}`;
+    return `${row.scratchRiskLabel} scratch read. ${row.scratchTradeoffExplanation}`;
   }
 
   return `Needs the cutline to move or scratches ahead. ${row.recommendation}`;
+}
+
+function scratchReadLabel(event: AthleteEventSummary) {
+  if (event.netScratchCall === "Likely scratch" || event.scratchProbability >= 55) {
+    return "likely scratch";
+  }
+
+  if (event.netScratchCall === "Maybe scratch" || event.scratchProbability >= 35) {
+    return "scratch watch";
+  }
+
+  if (event.scratchProbability >= 18) {
+    return "coach call";
+  }
+
+  return "keep entered";
 }
 
 function eventSummary(
@@ -422,7 +438,7 @@ function scratchSummary(
     .slice(0, 3)
     .map(
       (event) =>
-        `${event.eventLabel.replace(`${event.eventLabel.split(" ")[0]} `, "")}: ${event.scratchProbabilityLabel} scratch risk, ${event.netScratchCall.toLowerCase()}`,
+        `${event.eventLabel.replace(`${event.eventLabel.split(" ")[0]} `, "")}: ${scratchReadLabel(event)}`,
     )
     .join("; ")}${relayLoadSentence(relays)}`;
 }
@@ -500,7 +516,7 @@ function likelyPlan(
       .slice()
       .sort((a, b) => b.stateProbability - a.stateProbability || a.rank - b.rank)[0];
     const bubbleText = bubble.length
-      ? ` If chasing another event, ${bubble[0].eventLabel} is the best bubble target at ${bubble[0].stateProbabilityLabel} state odds.`
+      ? ` If chasing another event, ${bubble[0].eventLabel} is the best bubble target from the loaded rankings.`
       : "";
 
     return {
@@ -512,13 +528,13 @@ function likelyPlan(
   if (selectedDefinition.discipline === "distance") {
     return {
       title: "Best chase read",
-      text: `${bubble[0]?.eventLabel ?? selected.eventLabel} is the best loaded chase from this athlete's ranked events. Avoid stacking hard 3200 attempts on back-to-back days unless this is clearly the highest-probability state path.${relayText}`,
+      text: `${bubble[0]?.eventLabel ?? selected.eventLabel} is the best loaded chase from this athlete's ranked events. Avoid stacking hard 3200 attempts on back-to-back days unless this is clearly the cleanest state path.${relayText}`,
     };
   }
 
   return {
     title: "Best chase read",
-    text: `${bubble[0]?.eventLabel ?? selected.eventLabel} is the best loaded chase from this athlete's ranked events. Prioritize the event with the highest state odds and cleanest schedule fit.${relayText}`,
+    text: `${bubble[0]?.eventLabel ?? selected.eventLabel} is the best loaded chase from this athlete's ranked events. Prioritize the event with the strongest state path and cleanest schedule fit.${relayText}`,
   };
 }
 

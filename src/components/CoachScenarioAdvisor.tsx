@@ -270,7 +270,7 @@ export function CoachScenarioAdvisor({
             <button
               type="button"
               onClick={() => submit()}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#16324f] px-4 text-sm font-semibold text-white transition hover:bg-[#0f263d]"
+              className="coach-action app-button-navy inline-flex h-11 items-center justify-center gap-2 px-4 text-sm"
             >
               <Send size={15} />
               Ask

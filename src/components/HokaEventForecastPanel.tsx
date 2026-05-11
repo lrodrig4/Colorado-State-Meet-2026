@@ -36,12 +36,11 @@ export function HokaEventForecastPanel({
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-950">
               <CalendarClock size={18} className="text-[#16324f]" />
-              Predicted HOKA St. Vrain fields
+              Possible HOKA St. Vrain fields
             </div>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-              Team-attendance projection only: this uses the HOKA registered
-              team list, current top-18/bubble data, hold odds, improve odds,
-              and event load. It is not a confirmed entry list.
+              This is only an estimate from registered teams, current ranking
+              data, and event load. It is not a confirmed entry list.
             </p>
           </div>
           <span className="rounded-full bg-[#f0faf6] px-3 py-1 text-xs font-semibold text-[#2f6f5e]">

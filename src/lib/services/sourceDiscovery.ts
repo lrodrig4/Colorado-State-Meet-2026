@@ -4,6 +4,7 @@ import type {
   SourceDiscoveryResult,
   SourceKind,
 } from "@/types/domain";
+import { fetchSafeText, SafeFetchError } from "@/lib/server/safeFetch";
 
 const KEYWORDS = [
   "live results",
@@ -127,22 +128,22 @@ export function discoverSourcesFromHtml(
 export async function discoverSourcesFromUrl(
   url: string,
 ): Promise<SourceDiscoveryResult> {
-  const response = await fetch(url, {
-    headers: {
-      "user-agent":
-        "ColoradoDistanceQualifierTracker/0.1 (+https://vercel.app)",
-    },
-  });
-
-  if (!response.ok) {
+  try {
+    const result = await fetchSafeText(url, {
+      maxBytes: 750_000,
+      timeoutMs: 10_000,
+    });
+    return discoverSourcesFromHtml(result.text, result.finalUrl);
+  } catch (error) {
     return {
       secondaryResultsUrls: [],
       discoveredSourceUrls: [],
       status: "failed",
-      notes: [`Fetch failed with ${response.status} ${response.statusText}.`],
+      notes: [
+        error instanceof SafeFetchError
+          ? error.message
+          : "Source discovery fetch failed.",
+      ],
     };
   }
-
-  const html = await response.text();
-  return discoverSourcesFromHtml(html, url);
 }

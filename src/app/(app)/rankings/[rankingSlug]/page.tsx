@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
+import { SimpleSteps } from "@/components/AppPrimitives";
 import { ClassificationSelector } from "@/components/ClassificationSelector";
 import { FocusTeamSelector } from "@/components/FocusTeamSelector";
 import { LastChancePanel } from "@/components/LastChancePanel";
@@ -10,7 +11,6 @@ import {
   buildEventRecommendations,
   buildPuebloMeetMarks,
 } from "@/lib/services/lastChance";
-import { getStVrainHeatEstimates } from "@/lib/services/stVrainHeatEstimator";
 import {
   getClassifiedPerformances,
   getLastChanceDashboardForTeam,
@@ -68,19 +68,23 @@ export default async function EventRankingPage({
     notFound();
   }
 
-  const schoolOptions = getSchoolOptionsForClassification(classification);
+  const schoolOptions = await getSchoolOptionsForClassification(classification);
   const focusTeam = resolveFocusTeam(
     resolvedSearchParams.team ?? savedFocusTeam,
     schoolOptions,
     DEFAULT_FOCUS_TEAM,
   );
+  const [rankingsWithBubble, rankings] = await Promise.all([
+    getRankingsForClassification(classification, { bubbleLimit: 24 }),
+    getRankingsForClassification(classification),
+  ]);
   const ranking =
-    getRankingsForClassification(classification, { bubbleLimit: 24 }).find(
+    rankingsWithBubble.find(
       (result) =>
         result.gender === parsed.gender &&
         result.event === parsed.eventDefinition.event,
     ) ??
-    getRankingsForClassification(classification).find(
+    rankings.find(
       (result) =>
         result.gender === parsed.gender &&
         result.event === parsed.eventDefinition.event,
@@ -92,7 +96,10 @@ export default async function EventRankingPage({
 
   const title = `${parsed.gender} ${parsed.eventDefinition.displayName}`;
   const eventAnalysis = buildEventRecommendations(ranking, focusTeam);
-  const dashboard = getLastChanceDashboardForTeam(classification, focusTeam);
+  const [dashboard, classifiedPerformances] = await Promise.all([
+    getLastChanceDashboardForTeam(classification, focusTeam),
+    getClassifiedPerformances(),
+  ]);
   const eventRecommendations = dashboard.recommendations.filter(
     (row) =>
       row.gender === parsed.gender && row.event === parsed.eventDefinition.event,
@@ -120,25 +127,13 @@ export default async function EventRankingPage({
     dashboard.recommendations,
     [...eventRecommendations, ...focusRows, ...allRows],
   );
-  const stVrainHeatEstimate = (
-    await getStVrainHeatEstimates({
-      focusTeam,
-      forecasts: [],
-      recommendations: dashboard.recommendations,
-      predictions: dashboard.predictions,
-      eventFilter: {
-        gender: parsed.gender,
-        event: parsed.eventDefinition.event,
-      },
-    })
-  )[0];
-  const puebloMarks = buildPuebloMeetMarks(getClassifiedPerformances(), ranking);
+  const puebloMarks = buildPuebloMeetMarks(classifiedPerformances, ranking);
 
   return (
     <div>
       <PageHeader
         title={title}
-        description={`Top 18, bubble, Pueblo Twilight marks, and last-chance priorities for CHSAA ${classification} ${title.toLowerCase()}.`}
+        description={`See who is in the state field, who is just outside, and what ${focusTeam} should watch in CHSAA ${classification}.`}
         actions={
           <>
             <ClassificationSelector currentClassification={classification} />
@@ -146,7 +141,7 @@ export default async function EventRankingPage({
               schools={schoolOptions}
               currentTeam={focusTeam}
               classification={classification}
-              label={`${classification} team`}
+              label="Team"
             />
             <RankingEventSwitcher
               currentGender={parsed.gender}
@@ -156,6 +151,22 @@ export default async function EventRankingPage({
             />
           </>
         }
+      />
+      <SimpleSteps
+        steps={[
+          {
+            title: "Read the callout",
+            detail: "It tells you the main risk first.",
+          },
+          {
+            title: "Check your team",
+            detail: "Saved-team rows are highlighted.",
+          },
+          {
+            title: "Use the table",
+            detail: "Search, copy, or download the event list.",
+          },
+        ]}
       />
       <LastChancePanel
         focusTeam={focusTeam}
@@ -169,12 +180,9 @@ export default async function EventRankingPage({
         coachSummaryRows={coachSummaryRows}
         puebloMarks={puebloMarks}
         scratchPredictions={dashboard.scratchPredictions}
-        stVrainStateMarkOpportunities={
-          stVrainHeatEstimate?.stateMarkOpportunities
-        }
       />
       <RankingTable
-        title={`${title} ranking`}
+        title={`${title} list`}
         rows={ranking.top18}
         bubbleRows={ranking.bubble}
       />

@@ -36,6 +36,7 @@
     ".next-stale-*",
     ".playwright-mcp",
     ".tmp-historical",
+    "src/lib/data/*.generated.ts",
     "reports",
     "out",
     "build"

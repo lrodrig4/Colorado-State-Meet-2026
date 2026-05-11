@@ -7,6 +7,7 @@ import json
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -165,11 +166,14 @@ def fetch_html(url: str, timeout_s: float) -> str:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            timeout=max(1.0, float(timeout_s) + 2.0),
         )
         return result.stdout
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip()
         raise RuntimeError(f"curl failed for {url}: {stderr}") from e
+    except subprocess.TimeoutExpired as e:
+        raise RuntimeError(f"curl timed out for {url} after {timeout_s:.1f}s") from e
 
 
 def event_id_options(seed_html: str, gender: str) -> List[Tuple[str, str, str]]:
@@ -341,6 +345,7 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--prev", required=False)
     parser.add_argument("--timeout-seconds", type=float, default=15.0)
+    parser.add_argument("--concurrency", type=int, default=6)
     parser.add_argument("--sleep-ms", type=int, default=0)
     args = parser.parse_args()
 
@@ -355,24 +360,52 @@ def main() -> int:
             continue
 
         options = event_id_options(seed_html, gender)
-        for event, event_id, _label in options:
-            source_url = make_url(seed_url, event_id, 1)
-            try:
-                html_text = seed_html if (event == "100m") else fetch_html(source_url, args.timeout_seconds)
-                rows.extend(
-                    parse_leaderboard_page(
-                        html_text,
-                        gender=gender,
-                        event=event,
-                        source_url=source_url,
-                        classification=args.classification,
+        # Optional polite sleep is only supported in sequential mode.
+        if args.sleep_ms:
+            for event, event_id, _label in options:
+                source_url = make_url(seed_url, event_id, 1)
+                try:
+                    html_text = seed_html if (event == "100m") else fetch_html(source_url, args.timeout_seconds)
+                    rows.extend(
+                        parse_leaderboard_page(
+                            html_text,
+                            gender=gender,
+                            event=event,
+                            source_url=source_url,
+                            classification=args.classification,
+                        )
                     )
-                )
-            except Exception as e:
-                errors.append(f"{gender} {event}: {e}")
-
-            if args.sleep_ms:
+                except Exception as e:
+                    errors.append(f"{gender} {event}: {e}")
                 time.sleep(args.sleep_ms / 1000.0)
+            continue
+
+        max_workers = max(1, min(int(args.concurrency), len(options) or 1))
+
+        def scrape_event(event: str, event_id: str):
+            source_url = make_url(seed_url, event_id, 1)
+            html_text = seed_html if (event == "100m") else fetch_html(source_url, args.timeout_seconds)
+            parsed_rows = parse_leaderboard_page(
+                html_text,
+                gender=gender,
+                event=event,
+                source_url=source_url,
+                classification=args.classification,
+            )
+            return event, parsed_rows
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(scrape_event, event, event_id): event
+                for event, event_id, _label in options
+            }
+            for future in as_completed(futures):
+                event = futures[future]
+                try:
+                    _event, parsed_rows = future.result()
+                    rows.extend(parsed_rows)
+                except Exception as e:
+                    errors.append(f"{gender} {event}: {e}")
 
     # keep only top-18 unique ranks per event/gender
     dedup: Dict[Tuple[str, str, int], Row] = {}
@@ -398,6 +431,10 @@ def main() -> int:
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, sort_keys=False)
 
+    print(
+        f"[MaxPreps] {args.classification} -> {args.out} rows={payload['rowCount']} errors={len(errors)}",
+        file=sys.stderr if errors else sys.stdout,
+    )
     return 0
 
 

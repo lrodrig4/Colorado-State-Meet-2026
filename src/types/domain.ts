@@ -1,5 +1,7 @@
 export type Classification = "1A" | "2A" | "3A" | "4A" | "5A";
 
+export type EventSquadScope = Classification | "All";
+
 export type Gender = "Boys" | "Girls";
 
 export type EventKey =
@@ -146,6 +148,42 @@ export interface RankingResult {
   top18: RankingRow[];
   bubble: RankingRow[];
   excluded: Performance[];
+}
+
+export interface EventSquadAthlete extends RankingRow {
+  squadSlot: number;
+}
+
+export interface EventSquadRankingRow {
+  rank: number;
+  school: string;
+  classification: EventSquadScope;
+  event: EventKey;
+  gender: Gender;
+  athletes: EventSquadAthlete[];
+  aggregateValue: number;
+  aggregateRaw: string;
+  averageValue: number;
+  averageRaw: string;
+}
+
+export interface EventSquadIncompleteRow {
+  school: string;
+  classification: EventSquadScope;
+  event: EventKey;
+  gender: Gender;
+  athleteCount: number;
+  bestAthlete?: RankingRow;
+}
+
+export interface EventSquadRankingResult {
+  classification: EventSquadScope;
+  event: EventKey;
+  gender: Gender;
+  squadSize: number;
+  squads: EventSquadRankingRow[];
+  incompleteSquads: EventSquadIncompleteRow[];
+  eligibleAthleteCount: number;
 }
 
 export interface DiscoveredSource {

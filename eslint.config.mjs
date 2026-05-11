@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     ".tmp-historical/**",
     "node_modules/**",
     "node_modules.broken*/**",
+    "src/lib/data/*.generated.ts",
+    "src/lib/data/*.generated.json",
     "out/**",
     "build/**",
     "next-env.d.ts",

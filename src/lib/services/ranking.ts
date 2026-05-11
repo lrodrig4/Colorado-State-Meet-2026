@@ -6,10 +6,14 @@ import type {
   RankingResult,
   RankingRow,
 } from "@/types/domain";
-import { eventDefinitions, getEventDefinition } from "@/lib/data/events";
+import { eventDefinitions } from "@/lib/data/events";
 import { comparePerformanceMarks } from "@/lib/utils/time";
 import { applyClassifications } from "@/lib/services/classification";
 import { isRankingEligible } from "@/lib/services/review";
+import {
+  hasMoreCompleteAthleteName,
+  resolvePerformanceIdentityKey,
+} from "@/lib/services/athleteIdentity";
 
 function ensureClassified(performances: Performance[]) {
   return performances.every(
@@ -52,10 +56,7 @@ export function getSeasonBestRankings(
       continue;
     }
 
-    const definition = getEventDefinition(performance.event);
-    const key = definition.relay
-      ? `${performance.school.toLowerCase()}|${performance.event}`
-      : `${performance.athleteName.toLowerCase()}|${performance.school.toLowerCase()}|${performance.event}`;
+    const key = resolvePerformanceIdentityKey(performance, bestByAthlete);
     const existing = bestByAthlete.get(key);
 
     const comparison = existing
@@ -69,8 +70,9 @@ export function getSeasonBestRankings(
       !existing ||
       comparison < 0 ||
       (comparison === 0 &&
-        performance.source === "maxpreps" &&
-        existing.source !== "maxpreps");
+        ((performance.source === "maxpreps" &&
+          existing.source !== "maxpreps") ||
+          hasMoreCompleteAthleteName(performance, existing)));
 
     if (shouldReplace) {
       if (existing) {

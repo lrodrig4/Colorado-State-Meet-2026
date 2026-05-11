@@ -22,9 +22,9 @@ export function ReviewTable({
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <section className="app-panel">
       <div className="overflow-hidden">
-        <table className="w-full table-fixed text-left text-sm">
+        <table className="app-data-table table-fixed">
           <colgroup>
             <col className="w-[18%]" />
             <col className="w-[18%]" />
@@ -34,15 +34,15 @@ export function ReviewTable({
             <col className="w-[16%]" />
             <col className="w-[8%]" />
           </colgroup>
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead>
             <tr>
-              <th className="px-3 py-3">Performance</th>
-              <th className="px-3 py-3">School / class</th>
-              <th className="px-3 py-3">Mark</th>
-              <th className="px-3 py-3">Meet</th>
-              <th className="px-3 py-3">Status</th>
-              <th className="px-3 py-3">Flags</th>
-              <th className="px-3 py-3">Decision</th>
+              <th>Performance</th>
+              <th>School / class</th>
+              <th>Mark</th>
+              <th>Meet</th>
+              <th>Status</th>
+              <th>Flags</th>
+              <th>Decision</th>
             </tr>
           </thead>
           <tbody>
@@ -52,7 +52,7 @@ export function ReviewTable({
 
               return (
                 <tr key={performance.id} className="border-t border-slate-100">
-                  <td className="break-words px-3 py-3">
+                  <td className="break-words">
                     <div className="font-medium text-slate-950">
                       {performance.athleteName}
                     </div>
@@ -60,7 +60,7 @@ export function ReviewTable({
                       {performance.gender} {performance.event}
                     </div>
                   </td>
-                  <td className="break-words px-3 py-3">
+                  <td className="break-words">
                     <div>{performance.school}</div>
                     <div className="text-xs text-slate-500">
                       {performance.classification ?? "Unknown"} -{" "}
@@ -69,7 +69,7 @@ export function ReviewTable({
                         : "unverified"}
                     </div>
                   </td>
-                  <td className="break-words px-3 py-3">
+                  <td className="break-words">
                     <div className="font-semibold tabular-nums">
                       {performance.markRaw}
                     </div>
@@ -77,16 +77,16 @@ export function ReviewTable({
                       {performance.timingType}
                     </div>
                   </td>
-                  <td className="px-3 py-3">
+                  <td>
                     <div>{performance.meetName}</div>
                     <div className="text-xs text-slate-500">
                       {performance.meetDate}
                     </div>
                   </td>
-                  <td className="px-3 py-3">
+                  <td>
                     <StatusBadge status={status} />
                   </td>
-                  <td className="px-3 py-3">
+                  <td>
                     <div className="flex max-w-xl flex-wrap gap-2">
                       {flags.map((flag) => (
                         <span
@@ -104,7 +104,7 @@ export function ReviewTable({
                       ))}
                     </div>
                   </td>
-                  <td className="px-3 py-3">
+                  <td>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"

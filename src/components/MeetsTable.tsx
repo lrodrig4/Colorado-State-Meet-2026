@@ -10,7 +10,7 @@ function formatMeetDate(meet: Meet) {
 
 export function MeetsTable({ meets }: { meets: Meet[] }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <section className="app-panel">
       <div className="grid gap-3 p-3 lg:hidden">
         {meets.map((meet) => (
           <article key={`${meet.id}-card`} className="rounded-lg border border-slate-200 p-3">
@@ -42,7 +42,7 @@ export function MeetsTable({ meets }: { meets: Meet[] }) {
         ))}
       </div>
       <div className="hidden lg:block">
-        <table className="w-full table-fixed text-left text-sm">
+        <table className="app-data-table table-fixed">
           <colgroup>
             <col className="w-[21%]" />
             <col className="w-[13%]" />
@@ -53,22 +53,22 @@ export function MeetsTable({ meets }: { meets: Meet[] }) {
             <col className="w-[9%]" />
             <col className="w-[5%]" />
           </colgroup>
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead>
             <tr>
-              <th className="px-3 py-3">Meet</th>
-              <th className="px-3 py-3">Date</th>
-              <th className="px-3 py-3">Location</th>
-              <th className="px-3 py-3">Eligibility</th>
-              <th className="px-3 py-3">Primary results</th>
-              <th className="px-3 py-3">Timing</th>
-              <th className="px-3 py-3">Discovery</th>
-              <th className="px-3 py-3">Notes</th>
+              <th>Meet</th>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Counts?</th>
+              <th>Results link</th>
+              <th>Timing</th>
+              <th>Found?</th>
+              <th>Notes</th>
             </tr>
           </thead>
           <tbody>
             {meets.map((meet) => (
               <tr key={meet.id} className="border-t border-slate-100">
-                <td className="break-words px-3 py-3">
+                <td className="break-words">
                   <div className="font-medium text-slate-950">{meet.name}</div>
                   {meet.mileSplitUrl ? (
                     <a
@@ -81,14 +81,14 @@ export function MeetsTable({ meets }: { meets: Meet[] }) {
                     </a>
                   ) : null}
                 </td>
-                <td className="px-3 py-3 tabular-nums">
+                <td className="tabular-nums">
                   <div>{formatMeetDate(meet)}</div>
                   {meet.rawDate ? (
                     <div className="text-xs text-slate-500">{meet.rawDate}</div>
                   ) : null}
                 </td>
-                <td className="break-words px-3 py-3">{meet.location}</td>
-                <td className="px-3 py-3">
+                <td className="break-words">{meet.location}</td>
+                <td>
                   <div className="flex flex-col gap-1">
                     <span className="w-fit rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
                       {meet.eligibilityStatus ?? "eligible"}
@@ -105,7 +105,7 @@ export function MeetsTable({ meets }: { meets: Meet[] }) {
                     ) : null}
                   </div>
                 </td>
-                <td className="break-words px-3 py-3">
+                <td className="break-words">
                   {meet.primaryResultsUrl ? (
                     <a
                       href={meet.primaryResultsUrl}
@@ -123,13 +123,13 @@ export function MeetsTable({ meets }: { meets: Meet[] }) {
                     </span>
                   )}
                 </td>
-                <td className="break-words px-3 py-3">{meet.timingCompany ?? "Unknown"}</td>
-                <td className="px-3 py-3">
+                <td className="break-words">{meet.timingCompany ?? "Unknown"}</td>
+                <td>
                   <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold">
                     {meet.discoveryStatus.replace("_", " ")}
                   </span>
                 </td>
-                <td className="break-words px-3 py-3 text-xs leading-5 text-slate-600">
+                <td className="break-words text-xs leading-5 text-slate-600">
                   {meet.notes ?? ""}
                 </td>
               </tr>

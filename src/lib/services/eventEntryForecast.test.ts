@@ -27,6 +27,7 @@ function recommendation(
     meetName: overrides.meetName ?? "Test Meet",
     meetDate: overrides.meetDate ?? "2026-05-01",
     predictedCutoffRaw: overrides.predictedCutoffRaw ?? "2:01.00",
+    predictedCutoffValue: overrides.predictedCutoffValue ?? 121,
     holdProbability: overrides.holdProbability ?? 92,
     holdProbabilityLabel: overrides.holdProbabilityLabel ?? "92%",
     holdConfidenceIntervalLabel: overrides.holdConfidenceIntervalLabel ?? "86-96%",
@@ -72,11 +73,11 @@ test("protects high scoring seeds from weekend race guesses", () => {
   );
 
   assert.equal(row.projectedEntryLabel, "Expected to go");
-  assert.equal(row.weekendRaceLabel, "Likely protects");
+  assert.equal(row.weekendRaceLabel, "State focus");
   assert.equal(row.likelyRacingThisWeekend, false);
 });
 
-test("flags thin top-18 marks as likely weekend defenders", () => {
+test("flags thin top-18 marks as likely update candidates", () => {
   const row = forecastEventEntryRow(
     recommendation({
       rank: 17,
@@ -88,7 +89,7 @@ test("flags thin top-18 marks as likely weekend defenders", () => {
   );
 
   assert.equal(row.projectedEntryLabel, "At-risk seed");
-  assert.equal(row.weekendRaceLabel, "Likely defends");
+  assert.equal(row.weekendRaceLabel, "Needs update");
   assert.equal(row.likelyRacingThisWeekend, true);
 });
 

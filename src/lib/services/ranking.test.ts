@@ -123,6 +123,66 @@ test("ranking reconciliation dedupes 5A relay teams by school and event", () => 
   assert.equal(ranking.excluded[0]?.markRaw, "8:10.00");
 });
 
+test("ranking reconciliation collapses same-mark last-name-only aliases", () => {
+  const ranking = getSeasonBestRankings(
+    [
+      performance({
+        id: "last-name-only",
+        athleteName: "Schimmelpfennig",
+        markRaw: "5:01.81",
+        markValue: 301.81,
+      }),
+      performance({
+        id: "full-name",
+        athleteName: "Izzy Schimmelpfennig",
+        markRaw: "5:01.81",
+        markValue: 301.81,
+        source: "official_timing",
+      }),
+    ],
+    {
+      classification: "5A",
+      gender: "Boys",
+      event: "1600m",
+    },
+  );
+
+  assert.equal(ranking.top18.length, 1);
+  assert.equal(ranking.top18[0]?.athleteName, "Izzy Schimmelpfennig");
+  assert.equal(ranking.excluded[0]?.athleteName, "Schimmelpfennig");
+});
+
+test("ranking reconciliation collapses one-character first-name typos", () => {
+  const ranking = getSeasonBestRankings(
+    [
+      performance({
+        id: "slow-typo",
+        athleteName: "Elizabet Roberts",
+        school: "Roosevelt High School",
+        markRaw: "5:11.68",
+        markValue: 311.68,
+      }),
+      performance({
+        id: "fast-canonical",
+        athleteName: "Elizabeth Roberts",
+        school: "Roosevelt High School",
+        markRaw: "5:01.71",
+        markValue: 301.71,
+        source: "maxpreps",
+      }),
+    ],
+    {
+      classification: "5A",
+      gender: "Boys",
+      event: "1600m",
+    },
+  );
+
+  assert.equal(ranking.top18.length, 1);
+  assert.equal(ranking.top18[0]?.athleteName, "Elizabeth Roberts");
+  assert.equal(ranking.excluded[0]?.athleteName, "Elizabet Roberts");
+});
+
 test("ranking excludes JV and depth-only marks from CHSAA qualifying lists", () => {
   const ranking = getSeasonBestRankings(
     [

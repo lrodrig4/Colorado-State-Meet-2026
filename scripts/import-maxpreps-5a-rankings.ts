@@ -4,8 +4,6 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import * as cheerio from "cheerio";
 import type { Classification, EventKey, Gender, Performance, VerificationStatus } from "@/types/domain";
-import { current3ABrowserRankingPerformances } from "@/lib/data/current3ABrowserRankings.generated";
-import { current5ABrowserRankingPerformances } from "@/lib/data/current5ABrowserRankings.generated";
 import { eventDefinitions, getEventDefinition } from "@/lib/data/events";
 import { applyClassification } from "@/lib/services/classification";
 import { comparePerformanceMarks, parsePerformanceMark } from "@/lib/utils/time";
@@ -85,10 +83,21 @@ const seedUrlsByClassification: Record<string, { boys: string; girls: string }> 
   },
 };
 
-const browserRowsByClassification: Record<string, Performance[]> = {
-  "3A": current3ABrowserRankingPerformances,
-  "5A": current5ABrowserRankingPerformances,
-};
+async function loadBrowserRankingPerformances(
+  classification: Classification,
+): Promise<Performance[]> {
+  if (classification === "3A") {
+    const module = await import("@/lib/data/current3ABrowserRankings.generated");
+    return module.current3ABrowserRankingPerformances as Performance[];
+  }
+
+  if (classification === "5A") {
+    const module = await import("@/lib/data/current5ABrowserRankings.generated");
+    return module.current5ABrowserRankingPerformances as Performance[];
+  }
+
+  return [];
+}
 
 const seedUrls = seedUrlsByClassification[CLASSIFICATION];
 if (!seedUrls) {
@@ -398,8 +407,12 @@ async function scrapeMaxPreps() {
   const rows: MaxPrepsRankingRow[] = [];
 
   for (const config of configs) {
+    console.log(
+      `[MaxPreps] Scraping ${CLASSIFICATION} ${config.gender} leaderboards (maxRank=${MAX_RANK} maxPages=${MAX_PAGES} concurrency=${MAX_CONCURRENCY})`,
+    );
     const seedHtml = await fetchHtml(config.seedUrl);
     const options = eventIdOptions(seedHtml, config.gender);
+    console.log(`[MaxPreps] ${CLASSIFICATION} ${config.gender}: ${options.length} events`);
 
     const pending = [...options];
     const workers = Array.from(
@@ -409,6 +422,7 @@ async function scrapeMaxPreps() {
           const option = pending.shift();
           if (!option) return;
 
+          console.log(`[MaxPreps] ${CLASSIFICATION} ${config.gender}: ${option.event}`);
           try {
             const eventRows: MaxPrepsRankingRow[] = [];
             for (
@@ -437,13 +451,16 @@ async function scrapeMaxPreps() {
               }
             }
 
+            console.log(
+              `[MaxPreps] ${CLASSIFICATION} ${config.gender}: ${option.event} -> ${byRank.size} rows`,
+            );
             rows.push(...[...byRank.values()].sort((a, b) => a.rank - b.rank));
           } catch (error) {
-            errors.push(
-              `${config.gender} ${option.event}: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            );
+            const message = `${config.gender} ${option.event}: ${
+              error instanceof Error ? error.message : String(error)
+            }`;
+            console.error(`[MaxPreps] ${CLASSIFICATION} ${message}`);
+            errors.push(message);
           }
         }
       },
@@ -461,7 +478,11 @@ async function scrapeMaxPreps() {
   };
 }
 
-function buildReconciliationReport(input: MaxPrepsRawFile, performances: Performance[]) {
+function buildReconciliationReport(
+  input: MaxPrepsRawFile,
+  performances: Performance[],
+  browserPerformances: Performance[],
+) {
   const maxPrepsEligible = performances.filter(
     (performance) => performance.verificationStatus === "verified",
   );
@@ -469,7 +490,7 @@ function buildReconciliationReport(input: MaxPrepsRawFile, performances: Perform
     (performance) => performance.verificationStatus !== "verified",
   );
   const mileSplitByKey = new Map(
-    (browserRowsByClassification[CLASSIFICATION] ?? []).map((performance) => [
+    browserPerformances.map((performance) => [
       maxPrepsRowKey(performance),
       performance,
     ]),
@@ -573,6 +594,7 @@ async function main() {
   const performances = input.rows
     .map(toPerformance)
     .filter((performance): performance is Performance => Boolean(performance));
+  const browserPerformances = await loadBrowserRankingPerformances(CLASSIFICATION);
   const metadata = {
     generatedAt: input.scrapedAt,
     source: input.source,
@@ -606,7 +628,7 @@ export const current${EXPORT_CLASSIFICATION}MaxPrepsRankingPerformances: Perform
   await mkdir(path.dirname(REPORT_OUTPUT_PATH), { recursive: true });
   await writeFile(
     REPORT_OUTPUT_PATH,
-    JSON.stringify(buildReconciliationReport(input, performances), null, 2),
+    JSON.stringify(buildReconciliationReport(input, performances, browserPerformances), null, 2),
   );
 
   console.log(

@@ -166,6 +166,39 @@ function syntheticFieldRows(
   });
 }
 
+function calibrationRanking(
+  event: Performance["event"],
+  gender: Performance["gender"],
+): RankingResult {
+  const rows = syntheticEventRows(
+    event,
+    250,
+    Object.fromEntries(
+      Array.from({ length: 24 }, (_, index) => [
+        index + 1,
+        {
+          gender,
+          classification: "2A" as const,
+        },
+      ]),
+    ),
+    24,
+  ).map((performance, index) => ({
+    ...performance,
+    rank: index + 1,
+    isBubble: index >= 18,
+  }));
+
+  return {
+    classification: "2A",
+    event,
+    gender,
+    top18: rows.slice(0, 18),
+    bubble: rows.slice(18),
+    excluded: [],
+  };
+}
+
 test("predicts a faster time-event cutoff from rank spread", () => {
   const prediction = buildCutoffPrediction(ranking());
 
@@ -179,6 +212,49 @@ test("predicts a faster time-event cutoff from rank spread", () => {
   assert.match(prediction.sourceCoverageLabel, /8 CHSAA seed-cut years/);
   assert.ok((prediction.historicalAverageSourceConfidence ?? 0) < 95);
   assert.match(prediction.historicalCaveatLabel ?? "", /2025/);
+});
+
+test("applies Top 18 backtest calibration to volatile gender-event cutoffs", () => {
+  const boysRanking = calibrationRanking("1600m", "Boys");
+  const girlsRanking = calibrationRanking("1600m", "Girls");
+  const boysPrediction = buildCutoffPrediction(boysRanking);
+  const girlsPrediction = buildCutoffPrediction(girlsRanking);
+
+  assert.ok(boysPrediction);
+  assert.ok(girlsPrediction);
+  assert.equal(boysPrediction.historicalYearCount, 0);
+  assert.equal(girlsPrediction.historicalYearCount, 0);
+  assert.equal(girlsPrediction.predictedCutoffValue < boysPrediction.predictedCutoffValue, true);
+  assert.match(girlsPrediction.lateWaveSummary, /retained 44\/54/);
+});
+
+test("lowers hold odds and raises chase odds for volatile Top 18 boards", () => {
+  const boysRanking = calibrationRanking("1600m", "Boys");
+  const girlsRanking = calibrationRanking("1600m", "Girls");
+  const boysPrediction = buildCutoffPrediction(boysRanking);
+  const girlsPrediction = buildCutoffPrediction(girlsRanking);
+
+  assert.ok(boysPrediction);
+  assert.ok(girlsPrediction);
+
+  const boysRecommendation = buildRecommendation(
+    boysRanking.top18[17],
+    boysPrediction,
+  );
+  const girlsRecommendation = buildRecommendation(
+    girlsRanking.top18[17],
+    girlsPrediction,
+  );
+
+  assert.equal(
+    girlsRecommendation.holdProbability < boysRecommendation.holdProbability,
+    true,
+  );
+  assert.equal(
+    girlsRecommendation.improveProbability > boysRecommendation.improveProbability,
+    true,
+  );
+  assert.match(girlsRecommendation.improveExplanation, /Backtest volatility/);
 });
 
 test("uses supplied 5A qualifier PDFs for historical cutoffs", () => {

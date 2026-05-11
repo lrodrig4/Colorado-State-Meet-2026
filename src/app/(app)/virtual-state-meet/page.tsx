@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { SimpleSteps } from "@/components/AppPrimitives";
 import { ClassificationSelector } from "@/components/ClassificationSelector";
 import { FocusTeamSelector } from "@/components/FocusTeamSelector";
 import { PageHeader } from "@/components/PageHeader";
@@ -26,19 +27,21 @@ export default async function VirtualStateMeetPage({
   const savedFocusTeam = decodeFocusTeamCookie(
     cookieStore.get(focusTeamCookieName(classification))?.value,
   );
-  const schoolOptions = getSchoolOptionsForClassification(classification);
+  const [schoolOptions, meet] = await Promise.all([
+    getSchoolOptionsForClassification(classification),
+    getVirtualMeetForClassification(classification),
+  ]);
   const focusTeam = resolveFocusTeam(
     resolvedSearchParams.team ?? savedFocusTeam,
     schoolOptions,
     DEFAULT_FOCUS_TEAM,
   );
-  const meet = getVirtualMeetForClassification(classification);
 
   return (
     <div>
       <PageHeader
-        title="State scoring scenarios"
-        description={`Run one CHSAA ${classification} boys or girls state scoreboard at a time, then edit finishes and score ranges for ${focusTeam}.`}
+        title="Change Scores"
+        description={`Pick boys or girls, change finish places, and see how ${focusTeam}'s team score changes.`}
         actions={
           <>
             <ClassificationSelector currentClassification={classification} />
@@ -46,10 +49,26 @@ export default async function VirtualStateMeetPage({
               schools={schoolOptions}
               currentTeam={focusTeam}
               classification={classification}
-              label={`${classification} team`}
+              label="Team"
             />
           </>
         }
+      />
+      <SimpleSteps
+        steps={[
+          {
+            title: "Pick boys or girls",
+            detail: "Use the first two buttons.",
+          },
+          {
+            title: "Open a team",
+            detail: "Tap edit places on any team row.",
+          },
+          {
+            title: "Change places",
+            detail: "The points update right away.",
+          },
+        ]}
       />
       <VirtualMeetView meet={meet} focusTeam={focusTeam} />
     </div>

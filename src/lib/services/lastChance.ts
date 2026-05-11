@@ -53,7 +53,9 @@ const lateWindowMeetNames = new Set([
   PUEBLO_TWILIGHT,
 ]);
 
-const movementByEvent: Record<EventKey, { factor: number; min: number; max: number }> = {
+type MovementConfig = { factor: number; min: number; max: number };
+
+const movementByEvent: Record<EventKey, MovementConfig> = {
   "100m": { factor: 0.45, min: 0.04, max: 0.16 },
   "200m": { factor: 0.45, min: 0.08, max: 0.35 },
   "400m": { factor: 0.4, min: 0.18, max: 0.85 },
@@ -74,6 +76,93 @@ const movementByEvent: Record<EventKey, { factor: number; min: number; max: numb
   "Shot Put": { factor: 0.28, min: 6, max: 24 },
   "Discus": { factor: 0.28, min: 18, max: 72 },
 };
+
+const expectedTop18MissRate = 0.1;
+
+const top18MembershipBacktest: Partial<
+  Record<`${Gender}|${EventKey}`, { right: number; wrong: number }>
+> = {
+  "Boys|100m": { right: 43, wrong: 11 },
+  "Girls|100m": { right: 53, wrong: 1 },
+  "Boys|200m": { right: 50, wrong: 4 },
+  "Girls|200m": { right: 51, wrong: 3 },
+  "Boys|400m": { right: 52, wrong: 2 },
+  "Girls|400m": { right: 49, wrong: 5 },
+  "Boys|800m": { right: 50, wrong: 4 },
+  "Girls|800m": { right: 49, wrong: 5 },
+  "Boys|1600m": { right: 47, wrong: 7 },
+  "Girls|1600m": { right: 44, wrong: 10 },
+  "Boys|3200m": { right: 52, wrong: 2 },
+  "Girls|3200m": { right: 50, wrong: 4 },
+  "Boys|110m Hurdles": { right: 51, wrong: 3 },
+  "Girls|100m Hurdles": { right: 49, wrong: 5 },
+  "Boys|300m Hurdles": { right: 49, wrong: 5 },
+  "Girls|300m Hurdles": { right: 49, wrong: 5 },
+  "Boys|4x100m Relay": { right: 48, wrong: 6 },
+  "Girls|4x100m Relay": { right: 47, wrong: 7 },
+  "Boys|4x200m Relay": { right: 48, wrong: 6 },
+  "Girls|4x200m Relay": { right: 46, wrong: 8 },
+  "Boys|4x400m Relay": { right: 48, wrong: 6 },
+  "Girls|4x400m Relay": { right: 45, wrong: 9 },
+  "Boys|4x800m Relay": { right: 49, wrong: 5 },
+  "Girls|4x800m Relay": { right: 49, wrong: 5 },
+  "Boys|High Jump": { right: 49, wrong: 5 },
+  "Girls|High Jump": { right: 48, wrong: 6 },
+  "Boys|Pole Vault": { right: 46, wrong: 8 },
+  "Girls|Pole Vault": { right: 50, wrong: 4 },
+  "Boys|Long Jump": { right: 51, wrong: 3 },
+  "Girls|Long Jump": { right: 51, wrong: 3 },
+  "Boys|Triple Jump": { right: 46, wrong: 8 },
+  "Girls|Triple Jump": { right: 49, wrong: 5 },
+  "Boys|Shot Put": { right: 48, wrong: 6 },
+  "Girls|Shot Put": { right: 50, wrong: 4 },
+  "Boys|Discus": { right: 50, wrong: 4 },
+  "Girls|Discus": { right: 48, wrong: 6 },
+};
+
+function top18VolatilityCalibration(gender: Gender, event: EventKey) {
+  const result = top18MembershipBacktest[`${gender}|${event}`];
+
+  if (!result) {
+    return {
+      missRate: expectedTop18MissRate,
+      movementMultiplier: 1,
+      holdPenalty: 0,
+      improveBoost: 0,
+      label: undefined,
+    };
+  }
+
+  const total = result.right + result.wrong;
+  const missRate = total ? result.wrong / total : expectedTop18MissRate;
+  const extraMissRate = Math.max(0, missRate - expectedTop18MissRate);
+  const movementMultiplier = clamp(1 + extraMissRate * 3, 1, 1.38);
+  const holdPenalty = Math.round(clamp(extraMissRate * 110, 0, 12));
+  const improveBoost = Math.round(clamp(extraMissRate * 85, 0, 9));
+  const label =
+    movementMultiplier > 1
+      ? `May 6-10 backtest retained ${result.right}/${total} Top 18 entries for ${gender} ${event}; widening this event's late-week danger zone.`
+      : undefined;
+
+  return {
+    missRate,
+    movementMultiplier,
+    holdPenalty,
+    improveBoost,
+    label,
+  };
+}
+
+function movementFor(event: EventKey, gender: Gender): MovementConfig {
+  const base = movementByEvent[event];
+  const calibration = top18VolatilityCalibration(gender, event);
+
+  return {
+    factor: base.factor * calibration.movementMultiplier,
+    min: base.min * calibration.movementMultiplier,
+    max: base.max * calibration.movementMultiplier,
+  };
+}
 
 type HistoricalSeedCutoff = {
   year: number;
@@ -998,7 +1087,8 @@ function probabilityFor(
   prediction: CutoffPrediction,
   scratchAdjustment = 0,
 ): { probability: number; interval: string } {
-  const movementConfig = movementByEvent[row.event];
+  const movementConfig = movementFor(row.event, row.gender);
+  const calibration = top18VolatilityCalibration(row.gender, row.event);
   const uncertainty = Math.max(
     movementConfig.min * 2,
     movementConfig.max * (prediction.confidence === "High" ? 0.6 : 0.85),
@@ -1007,8 +1097,16 @@ function probabilityFor(
   const bubbleBase = row.rank <= TOP_LIMIT ? 91 : 61 - rankPenalty;
   const cutlinePenalty = clamp((gap / uncertainty) * 32, -18, 46);
   const topPressure = row.rank <= TOP_LIMIT ? Math.max(0, row.rank - 12) * 2.2 : 0;
+  const volatilityPenalty =
+    row.rank <= TOP_LIMIT
+      ? calibration.holdPenalty * clamp((row.rank - 10) / 8, 0, 1)
+      : calibration.holdPenalty * 0.65;
   const rawProbability = clamp(
-    bubbleBase - cutlinePenalty - topPressure + scratchAdjustment,
+    bubbleBase -
+      cutlinePenalty -
+      topPressure -
+      volatilityPenalty +
+      scratchAdjustment,
     2,
     98,
   );
@@ -1053,7 +1151,8 @@ function improvementFor(
   prediction: CutoffPrediction,
 ): { probability: number; interval: string; explanation: string } {
   const definition = getEventDefinition(row.event);
-  const movementConfig = movementByEvent[row.event];
+  const movementConfig = movementFor(row.event, row.gender);
+  const calibration = top18VolatilityCalibration(row.gender, row.event);
   const strikeWindow = Math.max(movementConfig.max, movementConfig.min * 2);
   const disciplineBase = {
     sprint: 30,
@@ -1067,8 +1166,14 @@ function improvementFor(
   const rankUrgency = row.rank > TOP_LIMIT ? clamp((TOP_LIMIT + 8 - row.rank) * 2, -18, 12) : 0;
   const safeSeedPenalty = row.rank <= TOP_LIMIT && gap <= 0 ? Math.max(0, 12 - row.rank) * 0.9 : 0;
   const lateWaveBoost = Number.parseInt(prediction.lateWaveRaw, 10) > 24 ? 4 : 0;
+  const backtestBoost = row.rank >= 13 ? calibration.improveBoost : 0;
   const rawProbability = clamp(
-    disciplineBase + closeBonus + rankUrgency + lateWaveBoost - safeSeedPenalty,
+    disciplineBase +
+      closeBonus +
+      rankUrgency +
+      lateWaveBoost +
+      backtestBoost -
+      safeSeedPenalty,
     4,
     86,
   );
@@ -1077,10 +1182,13 @@ function improvementFor(
     prediction.confidence === "High" ? 6 : prediction.confidence === "Medium" ? 8 : 12;
   const low = Math.round(clamp(probability - intervalWidth, 2, 96));
   const high = Math.round(clamp(probability + intervalWidth, 2, 96));
+  const backtestNote = backtestBoost
+    ? " Backtest volatility raises the value of another attempt in this event."
+    : "";
   const explanation =
     gap > 0
-      ? `Chance to get the needed ${formatPerformanceGap(row.event, gap)} improvement.`
-      : "Chance to improve seed if raced again; current mark already projects in.";
+      ? `Chance to get the needed ${formatPerformanceGap(row.event, gap)} improvement.${backtestNote}`
+      : `Chance to improve seed if raced again; current mark already projects in.${backtestNote}`;
 
   return {
     probability,
@@ -1164,7 +1272,8 @@ export function buildCutoffPrediction(ranking: RankingResult): CutoffPrediction 
   }
 
   const definition = getEventDefinition(ranking.event);
-  const movementConfig = movementByEvent[ranking.event];
+  const movementConfig = movementFor(ranking.event, ranking.gender);
+  const calibration = top18VolatilityCalibration(ranking.gender, ranking.event);
   const spreadAnchor =
     ranking.bubble[Math.min(5, ranking.bubble.length - 1)] ??
     ranking.bubble[0] ??
@@ -1222,7 +1331,7 @@ export function buildCutoffPrediction(ranking: RankingResult): CutoffPrediction 
     lateWave.recentRows === 1 ? "" : "s"
   } and ${lateWave.highPriorityRows} high-priority last-chance mark${
     lateWave.highPriorityRows === 1 ? "" : "s"
-  }.`;
+  }.${calibration.label ? ` ${calibration.label}` : ""}`;
 
   return {
     event: ranking.event,
@@ -1261,8 +1370,8 @@ export function buildCutoffPrediction(ranking: RankingResult): CutoffPrediction 
     confidenceSummary: confidenceAudit.summary,
     sourceCoverageLabel: confidenceAudit.sourceCoverageLabel,
     method: historical
-      ? `${OFFICIAL_SOURCE_SPINE} Public-source model only: current rank spread, recent high-priority meet pressure (${lateWave.highPriorityRows} near-cutline marks), pending ${PENDING_LAST_CHANCE_MEETS.join(" and ")} risk, and loaded CHSAA state seed cutoffs (${historical.years.join(", ")}). ${RESULT_ONLY_SOURCE_NOTE}`
-      : `${OFFICIAL_SOURCE_SPINE} Public-source model only: current rank spread, recent high-priority meet pressure (${lateWave.highPriorityRows} near-cutline marks), and pending ${PENDING_LAST_CHANCE_MEETS.join(" and ")} risk. ${ranking.classification}-specific CHSAA historical seed-cut rows are not loaded yet, so this view does not reuse the 4A historical model. ${RESULT_ONLY_SOURCE_NOTE}`,
+      ? `${OFFICIAL_SOURCE_SPINE} Public-source model only: current rank spread, event-specific May 6-10 Top 18 retention calibration, recent high-priority meet pressure (${lateWave.highPriorityRows} near-cutline marks), pending ${PENDING_LAST_CHANCE_MEETS.join(" and ")} risk, and loaded CHSAA state seed cutoffs (${historical.years.join(", ")}). ${RESULT_ONLY_SOURCE_NOTE}`
+      : `${OFFICIAL_SOURCE_SPINE} Public-source model only: current rank spread, event-specific May 6-10 Top 18 retention calibration, recent high-priority meet pressure (${lateWave.highPriorityRows} near-cutline marks), and pending ${PENDING_LAST_CHANCE_MEETS.join(" and ")} risk. ${ranking.classification}-specific CHSAA historical seed-cut rows are not loaded yet, so this view does not reuse the 4A historical model. ${RESULT_ONLY_SOURCE_NOTE}`,
   };
 }
 
@@ -1273,7 +1382,7 @@ export function buildRecommendation(
   nearbyLabel = "",
 ): LastChanceRecommendation {
   const definition = getEventDefinition(row.event);
-  const movementConfig = movementByEvent[row.event];
+  const movementConfig = movementFor(row.event, row.gender);
   const gap = signedGap(row, prediction);
   const strikeWindow = Math.max(movementConfig.max, movementConfig.min * 2);
   const status = statusFor(row, gap, strikeWindow);
@@ -1564,9 +1673,10 @@ function crossEventPotentialSignal(
       const support = recommendation.gapValue + prediction.predictedCutoffValue - equivalentValue;
       const reliability =
         distanceEquivalentReliability[`${sourceEvent}->${targetEvent}`] ?? 0.5;
+      const targetMovement = movementFor(targetEvent, recommendation.gender);
       const supportCap =
         distanceEquivalentSupportCap[`${sourceEvent}->${targetEvent}`] ??
-        movementByEvent[targetEvent].max * 2;
+        targetMovement.max * 2;
       const cappedSupport =
         support > 0 ? Math.min(support, supportCap) : Math.max(support, -supportCap);
 
@@ -1599,7 +1709,7 @@ function crossEventPotentialSignal(
   const worstSupport = [...candidates].sort(
     (a, b) => a.weightedSupport - b.weightedSupport,
   )[0];
-  const movementConfig = movementByEvent[recommendation.event];
+  const movementConfig = movementFor(recommendation.event, recommendation.gender);
   const breakthroughWindow = movementConfig.max * 1.6;
   const sourceLabel = getEventDefinition(bestSupport.sourceEvent).displayName;
   const equivalentRaw = formatPerformanceValue(

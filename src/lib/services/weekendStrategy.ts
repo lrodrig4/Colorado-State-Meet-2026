@@ -1,10 +1,7 @@
 import type { EventKey, Gender } from "@/types/domain";
 import { eventDefinitions, getEventDefinition } from "@/lib/data/events";
 import { isHokaStVrainAttendingSchool } from "@/lib/data/hokaStVrainTeams";
-import {
-  weekendMeetEntries,
-  type WeekendMeetEntry,
-} from "@/lib/data/weekendMeetEntries.generated";
+import { weekendMeetEntries, type WeekendMeetEntry } from "@/lib/data/weekendMeetEntries";
 import {
   formatScheduleSlot,
   lastChanceScheduleSlots,

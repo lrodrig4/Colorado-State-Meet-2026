@@ -8,21 +8,28 @@ import {
   finalizedHokaEntriesFromEstimates,
   getStVrainHeatEstimates,
 } from "@/lib/services/stVrainHeatEstimator";
+import { apiError } from "@/lib/server/api";
 import { resolveClassification } from "@/lib/utils/classificationScope";
 import { DEFAULT_FOCUS_TEAM, resolveFocusTeam } from "@/lib/utils/focusTeam";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const classification = resolveClassification(searchParams.get("class") ?? undefined);
-  const schoolOptions = getSchoolOptionsForClassification(classification);
+  const rawTeam = searchParams.get("team");
+
+  if (rawTeam && rawTeam.length > 160) {
+    return apiError("team query parameter is too long.");
+  }
+
+  const schoolOptions = await getSchoolOptionsForClassification(classification);
   const focusTeam = resolveFocusTeam(
-    searchParams.get("team") ?? DEFAULT_FOCUS_TEAM,
+    rawTeam?.trim() || DEFAULT_FOCUS_TEAM,
     schoolOptions,
     DEFAULT_FOCUS_TEAM,
   );
 
-  const baseStrategy = getWeekendStrategyForTeam(classification, focusTeam);
-  const dashboard = getLastChanceDashboardForTeam(classification, focusTeam);
+  const dashboard = await getLastChanceDashboardForTeam(classification, focusTeam);
+  const baseStrategy = await getWeekendStrategyForTeam(classification, focusTeam);
   const stVrainHeatEstimates = await getStVrainHeatEstimates({
     focusTeam,
     forecasts: baseStrategy.hokaEventForecasts,
@@ -32,7 +39,7 @@ export async function GET(request: NextRequest) {
   const finalizedHokaEntries =
     finalizedHokaEntriesFromEstimates(stVrainHeatEstimates);
   const strategy = finalizedHokaEntries.length
-    ? getWeekendStrategyForTeam(classification, focusTeam, {
+    ? await getWeekendStrategyForTeam(classification, focusTeam, {
         finalizedHokaEntries,
       })
     : baseStrategy;

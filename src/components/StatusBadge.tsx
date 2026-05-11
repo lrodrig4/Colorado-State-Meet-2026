@@ -11,7 +11,7 @@ export function StatusBadge({ status }: { status: VerificationStatus }) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold ${styles[status]}`}
+      className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold leading-4 ${styles[status]}`}
     >
       {status.replace("_", " ")}
     </span>

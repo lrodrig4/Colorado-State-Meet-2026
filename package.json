@@ -7,11 +7,19 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "deploy:prod": "npx --yes vercel deploy --prod --yes",
+    "rank": "tsx scripts/print-ranking.ts",
+    "deploy:prod": "npx vercel deploy --prod --yes",
+    "seed:last-chance-may8-9": "node scripts/import-may8-9-last-chance-results.mjs",
     "seed:milesplit-browser": "tsx scripts/import-milesplit-browser-rankings.ts",
-    "seed:maxpreps-4a": "MAXPREPS_CLASSIFICATION=4A tsx scripts/import-maxpreps-5a-rankings.ts",
-    "seed:maxpreps-5a": "tsx scripts/import-maxpreps-5a-rankings.ts",
-    "seed:maxpreps-3a": "MAXPREPS_CLASSIFICATION=3A tsx scripts/import-maxpreps-5a-rankings.ts",
+    "seed:athleticlive-last-chance": "node --no-warnings --experimental-strip-types scripts/import-athleticlive-last-chance-results.ts",
+    "seed:maxpreps-4a": "MAXPREPS_CLASSIFICATION=4A node --no-warnings --experimental-loader ./scripts/node-alias-loader.mjs scripts/import-maxpreps-5a-rankings.ts",
+    "seed:maxpreps-5a": "node --no-warnings --experimental-loader ./scripts/node-alias-loader.mjs scripts/import-maxpreps-5a-rankings.ts",
+    "seed:maxpreps-3a": "MAXPREPS_CLASSIFICATION=3A node --no-warnings --experimental-loader ./scripts/node-alias-loader.mjs scripts/import-maxpreps-5a-rankings.ts",
+    "mascots:template": "node --no-warnings --experimental-strip-types --experimental-loader ./scripts/node-alias-loader.mjs scripts/create-school-mascot-import-template.ts",
+    "mascots:discover:maxpreps": "node --no-warnings --experimental-strip-types --experimental-loader ./scripts/node-alias-loader.mjs scripts/discover-maxpreps-school-brand-assets.ts",
+    "mascots:upload": "node --no-warnings --experimental-strip-types --experimental-loader ./scripts/node-alias-loader.mjs scripts/upload-approved-mascot-assets.ts",
+    "sync:supabase": "node --no-warnings --experimental-strip-types --experimental-loader ./scripts/node-alias-loader.mjs scripts/sync-supabase-performances.ts",
+    "snapshot:runtime": "node --max-old-space-size=4096 --no-warnings --experimental-strip-types --experimental-loader ./scripts/node-alias-loader.mjs scripts/generate-runtime-snapshot.ts",
     "audit:3a": "AUDIT_CLASSIFICATION=3A tsx scripts/audit-class-verification.ts",
     "test": "tsx --test src/**/*.test.ts"
   },
@@ -20,7 +28,8 @@
     "lucide-react": "1.14.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",

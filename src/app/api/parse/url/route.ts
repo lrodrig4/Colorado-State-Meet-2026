@@ -1,40 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseResultHtml } from "@/lib/services/htmlParsers";
+import {
+  handleApiError,
+  readJsonObject,
+  requiredIsoDate,
+  requiredString,
+} from "@/lib/server/api";
+import { fetchSafeText, SafeFetchError } from "@/lib/server/safeFetch";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => null);
+  try {
+    const body = await readJsonObject(request, { maxBytes: 16_000 });
+    const url = requiredString(body, "url", { maxLength: 2_048 });
+    const meetName = requiredString(body, "meetName", { maxLength: 160 });
+    const meetDate = requiredIsoDate(body, "meetDate");
+    const result = await fetchSafeText(url, {
+      maxBytes: 1_500_000,
+      timeoutMs: 12_000,
+    });
 
-  if (!body?.url || !body?.meetName || !body?.meetDate) {
-    return NextResponse.json(
-      { error: "url, meetName, and meetDate are required." },
-      { status: 400 },
-    );
+    const performances = parseResultHtml(result.text, {
+      meetName,
+      meetDate,
+      sourceUrl: result.finalUrl,
+    });
+
+    return NextResponse.json({
+      performances,
+      count: performances.length,
+      note: "Parsed URL results are candidate performances and require review before rankings inclusion.",
+    });
+  } catch (error) {
+    if (error instanceof SafeFetchError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    return handleApiError(error);
   }
-
-  const response = await fetch(body.url, {
-    headers: {
-      "user-agent":
-        "ColoradoDistanceQualifierTracker/0.1 (+https://vercel.app)",
-    },
-  });
-
-  if (!response.ok) {
-    return NextResponse.json(
-      { error: `Fetch failed with ${response.status} ${response.statusText}` },
-      { status: 502 },
-    );
-  }
-
-  const html = await response.text();
-  const performances = parseResultHtml(html, {
-    meetName: body.meetName,
-    meetDate: body.meetDate,
-    sourceUrl: body.url,
-  });
-
-  return NextResponse.json({
-    performances,
-    count: performances.length,
-    note: "Parsed URL results are candidate performances and require review before rankings inclusion.",
-  });
 }

@@ -21,7 +21,9 @@ import type {
   VirtualStateMeet,
 } from "@/types/domain";
 import { getEventDefinition } from "@/lib/data/events";
+import { buildVirtualMeetCommandBoard } from "@/lib/services/virtualMeetCommandBoard";
 import { DEFAULT_FOCUS_TEAM, shortSchoolName } from "@/lib/utils/focusTeam";
+import { VirtualMeetCommandBoard } from "@/components/VirtualMeetCommandBoard";
 
 const SCORING = [10, 8, 7, 6, 5, 4, 3, 2, 1];
 
@@ -116,14 +118,14 @@ const projectionModeCopy: Record<
   { label: string; shortLabel: string; detail: string }
 > = {
   seed: {
-    label: "Seed order",
-    shortLabel: "Seed",
-    detail: "Scores the Top 18 exactly in ranked order.",
+    label: "Use list order",
+    shortLabel: "List",
+    detail: "Scores everyone exactly as listed today.",
   },
   realistic: {
-    label: "Realistic coach choices",
-    shortLabel: "Realistic",
-    detail: "Protects big individual points, clears obvious scratches, and prices relay alternate risk.",
+    label: "Use likely lineup",
+    shortLabel: "Likely",
+    detail: "Drops obvious no-shows and keeps big scorers safe.",
   },
 };
 
@@ -324,7 +326,7 @@ function individualRealisticAdjustment(
     return {
       scratched: true,
       placeDelta: 0,
-      label: "Likely scratch",
+      label: "Likely drop",
       reason: `Four-event pressure: ${bestOther.event} projects ${bestOtherValue} pts vs ${keepValue} here.`,
       tone: "scratch",
     };
@@ -334,7 +336,7 @@ function individualRealisticAdjustment(
     return {
       scratched: true,
       placeDelta: 0,
-      label: "Likely scratch",
+      label: "Likely drop",
       reason: `Distance triple pressure: ${bestOther.event} is the better scoring path.`,
       tone: "scratch",
     };
@@ -344,7 +346,7 @@ function individualRealisticAdjustment(
     return {
       scratched: true,
       placeDelta: 0,
-      label: "Likely scratch",
+      label: "Likely drop",
       reason: `${bestOther.event} has a clearer scoring path, so this lower-value entry is removed in realistic mode.`,
       tone: "scratch",
     };
@@ -354,7 +356,7 @@ function individualRealisticAdjustment(
     return {
       scratched: false,
       placeDelta: 1,
-      label: "Coach call",
+      label: "Check",
       reason: `Lower seed with multi-event load. Kept in, but moved down one place for realistic fatigue/priority risk.`,
       tone: "adjust",
     };
@@ -480,8 +482,8 @@ function buildRealisticAdjustments(
         adjustments.set(entry.id, {
           scratched: false,
           placeDelta: 0,
-          label: "Manual override",
-          reason: "Coach scenario edit overrides the automatic realistic model.",
+          label: "Changed by you",
+          reason: "Your place change is being used.",
           tone: "keep",
         });
         continue;
@@ -973,26 +975,26 @@ function FocusOpportunityPanel({
   return (
     <section className="grid gap-3 xl:grid-cols-4">
       <OpportunityList
-        title="Protect"
-        detail="Highest projected scoring value. Do not weaken these without a clear points gain."
+        title="Keep safe"
+        detail="These are the biggest point chances."
         rows={buckets.protect}
         empty="No high-value scoring entries loaded."
       />
       <OpportunityList
-        title="Steal points"
-        detail="Already scoring, but the best-case range can add team points."
+        title="Gain points"
+        detail="These can move up and add points."
         rows={buckets.steal}
         empty="No obvious scoring upgrades in the current range."
       />
       <OpportunityList
-        title="Break through"
-        detail="Currently outside points, but the best-case range reaches top nine."
+        title="Get points"
+        detail="These are close to the top nine."
         rows={buckets.breakthrough}
         empty="No non-scoring entries with a top-nine range."
       />
       <OpportunityList
-        title="Point risk"
-        detail="Current scorers whose lower range can lose points."
+        title="Points at risk"
+        detail="These can fall and lose points."
         rows={buckets.risk}
         empty="No major point-risk entries in this scenario."
       />
@@ -1075,13 +1077,12 @@ function RealisticScoreDeltaPanel({
         <div className="flex items-center gap-2">
           <GitCompare size={17} className="text-[#16324f]" />
           <h3 className="text-sm font-semibold text-slate-950">
-            Realistic score delta
+            Likely-lineup change
           </h3>
         </div>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Switch to realistic coach choices to compare seed-order scoring
-          against projected scratches, protected individual scorers, and relays
-          scored with alternate lineups.
+          Switch to likely lineup to see how drops and protected scorers change
+          the team score.
         </p>
       </section>
     );
@@ -1092,14 +1093,12 @@ function RealisticScoreDeltaPanel({
       <div className="flex items-center gap-2">
         <ShieldCheck size={17} className="text-amber-800" />
         <h3 className="text-sm font-semibold text-amber-950">
-          Realistic coach-choice score swing
+          Likely-lineup score swing
         </h3>
       </div>
       <p className="mt-2 text-sm leading-6 text-amber-950/80">
-        Seed order assumes every qualifier repeats the listed mark. Realistic
-        mode assumes coaches protect the biggest point opportunities, scratch
-        only lower-value individual events when the math is clear, and keep
-        relays entered while replacing overloaded legs with alternates.
+        List order assumes every qualifier races as listed. Likely lineup keeps
+        the biggest point chances and removes only obvious drops.
       </p>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-3">
@@ -1199,13 +1198,12 @@ function PalmerNarrative({
         <div className="flex items-center gap-2">
           <Target size={18} className="text-[#16324f]" />
           <h2 className="text-base font-semibold text-slate-950">
-            {shortSchoolName(focusTeam)} score-max plan
+            {shortSchoolName(focusTeam)} simple score plan
           </h2>
         </div>
         <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
-          This assumes it is state meet weekend. It ranks the events that matter
-          most for team points: current state scorers, athletes who can move into
-          the top 9, and spots where one better finish changes the team race.
+          These are the events that matter most for points: scorers, possible
+          scorers, and places where one better finish helps the team.
         </p>
       </div>
 
@@ -1238,13 +1236,13 @@ function PalmerNarrative({
         </div>
         <div className="p-4">
           <div className="text-xs font-semibold uppercase text-slate-500">
-            State meet priorities
+            Things to watch
           </div>
           <div className="mt-1 text-2xl font-semibold tabular-nums">
             {statePointRows.length}
           </div>
           <p className="mt-1 text-sm text-slate-600">
-            Events to hold, upgrade, or attack for points.
+            Events to hold, improve, or chase for points.
           </p>
         </div>
       </div>
@@ -1256,7 +1254,7 @@ function PalmerNarrative({
         aria-expanded={detailsOpen}
       >
         <span>
-          {detailsOpen ? "Hide" : "Show"} event priorities ({priorities.length})
+          {detailsOpen ? "Hide" : "Show"} events to watch ({priorities.length})
         </span>
         {detailsOpen ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
       </button>
@@ -1310,7 +1308,7 @@ function PalmerNarrative({
           ))}
           {!priorities.length ? (
             <div className="p-6 text-center text-sm text-slate-500">
-              No {shortSchoolName(focusTeam)} scoring priorities in the current virtual field.
+              No {shortSchoolName(focusTeam)} scoring events to watch in this view.
             </div>
           ) : null}
         </div>
@@ -1345,9 +1343,8 @@ function TeamScoreTable({
       <div className="border-b border-slate-200 p-4">
         <h2 className="text-base font-semibold text-slate-950">{title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Showing {teams.length} of {totalTeams} teams. CHSAA points score 9
-          places: 10-8-7-6-5-4-3-2-1. Open a team to edit projected place and
-          best-to-worst range.
+          Showing {teams.length} of {totalTeams} teams. Points go to the top
+          nine: 10-8-7-6-5-4-3-2-1. Open a team to change finish places.
         </p>
       </div>
       <div className="divide-y divide-slate-100 md:hidden">
@@ -1377,7 +1374,7 @@ function TeamScoreTable({
                       </div>
                       {team.school === focusTeam ? (
                         <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                          Focus
+                          Your team
                         </span>
                       ) : null}
                     </div>
@@ -1385,7 +1382,7 @@ function TeamScoreTable({
                       <span className="font-semibold tabular-nums text-slate-950">
                         {team.points} pts
                       </span>{" "}
-                      · range {team.lowPoints}-{team.highPoints} ·{" "}
+                      · points {team.lowPoints}-{team.highPoints} ·{" "}
                       {team.scoringEntries} scorers
                     </div>
                   </div>
@@ -1478,7 +1475,7 @@ function TeamScoreTable({
         })}
       </div>
       <div className="hidden overflow-hidden md:block">
-        <table className="w-full table-fixed text-left text-sm">
+        <table className="app-data-table table-fixed">
           <colgroup>
             <col className="w-[8%]" />
             <col className="w-[29%]" />
@@ -1487,13 +1484,13 @@ function TeamScoreTable({
             <col className="w-[16%]" />
             <col className="w-[18%]" />
           </colgroup>
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead>
             <tr>
               <th className="px-3 py-3">Rank</th>
               <th className="px-3 py-3">School</th>
               <th className="px-3 py-3">Points</th>
-              <th className="px-3 py-3">Score range</th>
-              <th className="px-3 py-3">Scoring entries</th>
+              <th className="px-3 py-3">Point range</th>
+              <th className="px-3 py-3">Scorers</th>
               <th className="px-3 py-3">Details</th>
             </tr>
           </thead>
@@ -1540,14 +1537,14 @@ function TeamScoreTable({
                         ) : (
                           <ChevronRight size={15} />
                         )}
-                        {open ? "Hide edits" : "Edit scorers"}
+                        {open ? "Hide" : "Edit places"}
                       </button>
                     </td>
                   </tr>
                   {open ? (
                     <tr key={`${key}-details`} className="border-t border-slate-100">
                       <td colSpan={6} className="bg-slate-50 p-3">
-                        <table className="w-full table-fixed text-left text-xs">
+                        <table className="app-data-table table-fixed text-xs">
                           <colgroup>
                             <col className="w-[18%]" />
                             <col className="w-[22%]" />
@@ -1563,8 +1560,8 @@ function TeamScoreTable({
                               <th className="px-2 py-2">Athlete / Team</th>
                               <th className="px-2 py-2">Seed</th>
                               <th className="px-2 py-2">Mark</th>
-                              <th className="px-2 py-2">Projected finish</th>
-                              <th className="px-2 py-2">Finish range</th>
+                              <th className="px-2 py-2">Finish</th>
+                              <th className="px-2 py-2">Best/worst</th>
                               <th className="px-2 py-2">Points</th>
                             </tr>
                           </thead>
@@ -1695,7 +1692,8 @@ export function VirtualMeetView({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [activeGender, setActiveGender] = useState<Gender>("Boys");
   const [showAllTeams, setShowAllTeams] = useState(false);
-  const [projectionMode, setProjectionMode] = useState<ProjectionMode>("seed");
+  const [projectionMode, setProjectionMode] =
+    useState<ProjectionMode>("realistic");
   const [priorityDetailsOpen, setPriorityDetailsOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
@@ -1714,6 +1712,17 @@ export function VirtualMeetView({
   const baselineTeamProjections = useMemo(
     () => buildTeamProjections(baselineEntries),
     [baselineEntries],
+  );
+  const editedCount = Object.keys(scenario).length;
+  const commandBoard = useMemo(
+    () =>
+      buildVirtualMeetCommandBoard({
+        focusTeam,
+        teams: teamProjections,
+        editedCount,
+        projectionMode,
+      }),
+    [editedCount, focusTeam, projectionMode, teamProjections],
   );
   const visibleTeamProjections = useMemo(() => {
     if (showAllTeams) return teamProjections;
@@ -1734,11 +1743,10 @@ export function VirtualMeetView({
     () => buildPalmerPriorities(projectedEntries, meet, focusTeam),
     [focusTeam, meet, projectedEntries],
   );
-  const editedCount = Object.keys(scenario).length;
   const focusProjection = teamProjections.find((team) => team.school === focusTeam);
   const shortFocusTeam = shortSchoolName(focusTeam);
   const projectionLabel =
-    projectionMode === "realistic" ? "Realistic" : "Seed-order";
+    projectionMode === "realistic" ? "Likely" : "List";
   const activeMeetEvents = meet.events.filter(
     (event) => event.gender === activeGender,
   );
@@ -1764,26 +1772,26 @@ export function VirtualMeetView({
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-5">
-      <section className="coach-surface overflow-hidden rounded-2xl">
+      <section className="coach-surface overflow-hidden rounded-lg">
         <div className="border-b border-slate-200 p-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <SlidersHorizontal size={18} className="text-[#16324f]" />
               <h2 className="text-base font-semibold text-slate-950">
-                Team score simulator
+                What-if team scores
               </h2>
             </div>
             <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
-              Pick one gender, choose the scoring model, then open only the
-              teams you want to edit.
+              Pick boys or girls. Then open a team row and change finish
+              places to see the score move.
             </p>
           </div>
 
           <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-            <div className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+            <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-2">
               <div className="flex items-center gap-2 px-1 pb-2 text-xs font-semibold uppercase text-slate-500">
                 <Users size={14} className="text-[#16324f]" />
-                Viewing
+                Boys or girls
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {(["Boys", "Girls"] as const).map((gender) => {
@@ -1809,7 +1817,7 @@ export function VirtualMeetView({
                           active ? "text-white/80" : "text-slate-500"
                         }`}
                       >
-                        {active ? "Active meet" : "Tap to switch"}
+                        {active ? "Showing now" : "Tap to switch"}
                       </span>
                     </button>
                   );
@@ -1817,10 +1825,10 @@ export function VirtualMeetView({
               </div>
             </div>
 
-            <div className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+            <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-2">
               <div className="flex items-center gap-2 px-1 pb-2 text-xs font-semibold uppercase text-slate-500">
                 <ShieldCheck size={14} className="text-amber-700" />
-                Scoring model
+                Scoring math
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 {(["seed", "realistic"] as const).map((mode) => {
@@ -1871,7 +1879,7 @@ export function VirtualMeetView({
             >
               <RotateCcw size={16} className="shrink-0" />
               <span className="truncate">
-                Reset scenario {editedCount ? `(${editedCount})` : ""}
+                Reset changes {editedCount ? `(${editedCount})` : ""}
               </span>
             </button>
             <button
@@ -1880,7 +1888,7 @@ export function VirtualMeetView({
               className="coach-action inline-flex min-w-0 items-center justify-center border border-slate-300 px-3 text-sm text-slate-700 hover:bg-slate-50"
             >
               <span className="truncate">
-                {showAllTeams ? "Show contenders" : "Show all teams"}
+                {showAllTeams ? "Show top teams" : "Show all teams"}
               </span>
             </button>
           </div>
@@ -1901,7 +1909,7 @@ export function VirtualMeetView({
           </div>
           <div className="border-b border-slate-200 p-4 md:border-b-0 md:border-r">
             <div className="text-xs font-semibold uppercase text-slate-500">
-              Simulator mode
+              Score mode
             </div>
             <div className="mt-1 text-2xl font-semibold">
               {projectionModeCopy[projectionMode].shortLabel}
@@ -1912,17 +1920,24 @@ export function VirtualMeetView({
           </div>
           <div className="p-4">
             <div className="text-xs font-semibold uppercase text-slate-500">
-              Editable entries
+              Places changed
             </div>
             <div className="mt-1 text-2xl font-semibold tabular-nums">
               {editedCount}
             </div>
             <div className="mt-1 text-sm text-slate-600">
-              Scenario overrides active
+              Changes by you
             </div>
           </div>
         </div>
       </section>
+
+      <VirtualMeetCommandBoard
+        board={commandBoard}
+        projectionMode={projectionMode}
+        onProjectionModeChange={setProjectionMode}
+        onResetScenario={() => setScenario({})}
+      />
 
       <RealisticScoreDeltaPanel
         projectionMode={projectionMode}
@@ -1940,17 +1955,16 @@ export function VirtualMeetView({
           focusTeam={focusTeam}
         />
         <PalmerPointMix entries={projectedEntries} focusTeam={focusTeam} />
-        <div className="coach-panel rounded-2xl p-4">
+        <div className="coach-panel rounded-lg p-4">
           <div className="flex items-center gap-2">
             <Target size={17} className="text-[#16324f]" />
             <h3 className="text-sm font-semibold text-slate-950">
-              Showing one meet at a time
+              One scoreboard at a time
             </h3>
           </div>
           <p className="mt-4 text-sm leading-6 text-slate-600">
-            Use the Boys/Girls toggle above to switch scoreboards. This keeps
-            the virtual meet focused and avoids loading both full team tables at
-            once.
+            Use Boys or Girls above to switch scoreboards. One at a time is
+            easier to read and faster on phones.
           </p>
         </div>
       </section>
@@ -1974,7 +1988,7 @@ export function VirtualMeetView({
         focusTeam={focusTeam}
       />
 
-      <section className="coach-panel overflow-hidden rounded-2xl">
+      <section className="coach-panel overflow-hidden rounded-lg">
         <button
           type="button"
           onClick={() => setScheduleOpen((current) => !current)}
@@ -1986,7 +2000,7 @@ export function VirtualMeetView({
               State meet schedule
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              {activeGender} event slots from the 2026 schedule PDFs.
+          {activeGender} event times from the 2026 schedule.
             </p>
           </div>
           <span className="shrink-0 text-slate-500">

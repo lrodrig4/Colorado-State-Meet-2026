@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDueProviders, runIngestion } from "@/lib/services/ingestion";
+import { requireCronRequest } from "@/lib/server/api";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-function isAuthorized(request: NextRequest) {
-  const configured = process.env.CRON_SECRET;
-  if (!configured) {
-    return true;
-  }
-
-  const auth = request.headers.get("authorization");
-  return auth === `Bearer ${configured}`;
-}
-
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const unauthorized = requireCronRequest(request);
+  if (unauthorized) return unauthorized;
 
   const dueProviders = getDueProviders();
   const run = await runIngestion({

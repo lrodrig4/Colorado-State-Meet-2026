@@ -256,12 +256,12 @@ export const schools: School[] = uniqueSchoolRows.map((row) => {
   };
 });
 
-const canonicalByExactName = new Map(
-  schools.map((school) => [
-    normalizeSchoolLookupKey(school.schoolName),
-    [school] as School[],
-  ]),
-);
+const canonicalByExactName = new Map<string, School[]>();
+for (const school of schools) {
+  const key = normalizeSchoolLookupKey(school.schoolName);
+  const current = canonicalByExactName.get(key) ?? [];
+  canonicalByExactName.set(key, [...current, school]);
+}
 
 const schoolsByLookupKey = new Map<string, School[]>();
 function addLookupKey(key: string, school: School) {

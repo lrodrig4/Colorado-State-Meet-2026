@@ -138,7 +138,7 @@ function weekendRace(row: LastChanceRecommendation): Pick<
 
   if (row.rank <= 9 && row.stateProbability >= 88) {
     return {
-      weekendRaceLabel: "Likely protects",
+      weekendRaceLabel: "State focus",
       weekendRaceTone: "emerald",
       likelyRacingThisWeekend: false,
       basis:
@@ -148,11 +148,11 @@ function weekendRace(row: LastChanceRecommendation): Pick<
 
   if (row.stateProbability < 78 || row.holdProbability < 68) {
     return {
-      weekendRaceLabel: "Likely defends",
+      weekendRaceLabel: "Needs update",
       weekendRaceTone: "amber",
       likelyRacingThisWeekend: true,
       basis:
-        "Current top-18 mark is thin enough that defending the seed this weekend is logical.",
+        "Current top-18 mark is thin enough that another last-chance attempt may be needed.",
     };
   }
 
@@ -167,7 +167,7 @@ function weekendRace(row: LastChanceRecommendation): Pick<
   }
 
   return {
-    weekendRaceLabel: "Probably rests",
+    weekendRaceLabel: "No chase",
     weekendRaceTone: "emerald",
     likelyRacingThisWeekend: false,
     basis:
@@ -232,6 +232,6 @@ export function buildEventEntryForecast(
     expectedEntries,
     coachCallEntries,
     likelyWeekendRacers,
-    summary: `${expectedEntries} expected entries, ${coachCallEntries} coach-call/watch entries, ${likelyWeekendRacers} guessed to race this weekend.`,
+    summary: `${expectedEntries} expected entries, ${coachCallEntries} coach-call/watch entries, ${likelyWeekendRacers} with last-chance pressure.`,
   };
 }

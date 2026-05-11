@@ -436,7 +436,7 @@ export function TeamDepthChartManager({
                     };
                   })
                 }
-                className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none focus:border-[#2f6f5e]"
+                className="app-select mt-1 h-11"
               >
                 <option value="Boys">Boys</option>
                 <option value="Girls">Girls</option>
@@ -452,7 +452,7 @@ export function TeamDepthChartManager({
                     event: event.target.value as EventKey,
                   }))
                 }
-                className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none focus:border-[#2f6f5e]"
+                className="app-select mt-1 h-11"
               >
                 {eventOptions
                   .filter((definition) => definition.genders.includes(form.gender))
@@ -474,7 +474,7 @@ export function TeamDepthChartManager({
                   }))
                 }
                 placeholder="Add athlete name"
-                className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none focus:border-[#2f6f5e]"
+                className="app-input mt-1 h-11"
               />
             </label>
             <label className="block text-sm font-semibold text-slate-700">
@@ -488,7 +488,7 @@ export function TeamDepthChartManager({
                   }))
                 }
                 placeholder="2:21.40 or 17-6"
-                className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none focus:border-[#2f6f5e]"
+                className="app-input mt-1 h-11"
               />
             </label>
             <label className="block text-sm font-semibold text-slate-700 sm:col-span-2">
@@ -499,7 +499,7 @@ export function TeamDepthChartManager({
                   setForm((current) => ({ ...current, note: event.target.value }))
                 }
                 placeholder="Optional: relay split, meet, or coach note"
-                className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none focus:border-[#2f6f5e]"
+                className="app-input mt-1 h-11"
               />
             </label>
           </div>
@@ -512,7 +512,7 @@ export function TeamDepthChartManager({
             <button
               type="button"
               onClick={addDraftEntry}
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0f2a47] px-4 text-sm font-semibold text-white transition hover:bg-[#163a5d]"
+              className="coach-action app-button-navy inline-flex h-10 items-center gap-2 px-4 text-sm"
             >
               <Plus size={16} />
               Add to chart
@@ -520,10 +520,10 @@ export function TeamDepthChartManager({
             <button
               type="button"
               onClick={saveDepthChart}
-              className={`inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold transition ${
+              className={`coach-action inline-flex h-10 items-center gap-2 px-4 text-sm transition ${
                 saved && !dirty
                   ? "bg-emerald-50 text-emerald-800"
-                  : "bg-[#2f6f5e] text-white hover:bg-[#255c4f]"
+                  : "app-button-primary"
               }`}
             >
               {saved && !dirty ? <Check size={16} /> : <Save size={16} />}
@@ -533,7 +533,7 @@ export function TeamDepthChartManager({
               <button
                 type="button"
                 onClick={resetDraft}
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="coach-action app-button-secondary inline-flex h-10 items-center gap-2 px-4 text-sm"
               >
                 <RotateCcw size={15} />
                 Undo unsaved
@@ -607,7 +607,7 @@ export function TeamDepthChartManager({
         </h3>
         <p className="mt-1 text-sm leading-6 text-slate-600">
           These panels show the full verified team list for each event, not just
-          the state-bubble rows. Open Boys Discus here to see every Palmer Ridge
+          the state-watch rows. Open Boys Discus here to see every Palmer Ridge
           thrower, including Cayman Davel and Xandr Warren.
         </p>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">

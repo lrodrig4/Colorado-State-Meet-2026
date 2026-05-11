@@ -246,7 +246,7 @@ export function OddsStepsSvg({ className = "" }: { className?: string }) {
       viewBox="0 0 210 72"
       className={className}
       role="img"
-      aria-label="Odds bands near the state cut line"
+      aria-label="Odds near the last state spot"
     >
       <rect width="210" height="72" rx="14" fill="#f8fbfd" />
       <path d="M18 52h174" stroke="#d8e2ea" strokeLinecap="round" strokeWidth="3" />

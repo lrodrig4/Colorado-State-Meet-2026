@@ -1,8 +1,8 @@
 import type { DataProvider, IngestionRun, Meet } from "@/types/domain";
 import { dataProviders } from "@/lib/data/providers";
 import { meets } from "@/lib/data/meets";
-import { performances } from "@/lib/data/performances";
 import { applyClassifications } from "@/lib/services/classification";
+import { getSourcePerformances } from "@/lib/services/performanceStore";
 import { discoverSourcesFromUrl } from "@/lib/services/sourceDiscovery";
 import { buildReviewQueue } from "@/lib/services/review";
 
@@ -71,7 +71,7 @@ export async function runIngestion(options?: {
     }
   }
 
-  const classifiedPerformances = applyClassifications(performances);
+  const classifiedPerformances = applyClassifications(await getSourcePerformances());
   const flaggedCandidates = buildReviewQueue(classifiedPerformances).length;
 
   return {

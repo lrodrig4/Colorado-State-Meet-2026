@@ -77,21 +77,20 @@ export function DeferredWeekendStrategyTools({
     <details
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
-      className="group rounded-lg border border-slate-200 bg-white [contain-intrinsic-size:280px] [content-visibility:auto]"
+      className="app-panel group [contain-intrinsic-size:280px] [content-visibility:auto]"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5">
         <div className="min-w-0">
           <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-950">
             <GitBranch size={18} className="text-[#16324f]" />
-            Weekend decision tools
+            Detailed decisions
           </div>
           <h2 className="mt-2 text-lg font-semibold tracking-normal text-slate-950">
-            Load scenario branches and individual flowcharts.
+            Open detailed plans only when you need them.
           </h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            Kept collapsed for phone speed. Opens {scenarioCount} branches,{" "}
-            {athleteCount} athlete paths, and {relayCount} relay paths for{" "}
-            {school}.
+            Kept closed for speed. Opens {scenarioCount} plans, {athleteCount}{" "}
+            athlete choices, and {relayCount} relay choices for {school}.
           </p>
         </div>
         <ChevronDown
@@ -121,12 +120,11 @@ export function DeferredWeekendStrategyTools({
         ) : loading ? (
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
             <Loader2 className="animate-spin text-[#2f6f5e]" size={16} />
-            Loading scenario branches and individual flowcharts...
+            Loading detailed plans...
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-slate-200 p-4 text-sm leading-6 text-slate-600">
-            Open this panel when you need the interactive bracket, individual
-            flowchart, or coach scenario chat.
+            Open this panel when you need more than the simple weekend summary.
           </div>
         )}
       </div>

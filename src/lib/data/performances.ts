@@ -12,9 +12,8 @@ import { current3AMaxPrepsRankingPerformances } from "@/lib/data/current3AMaxPre
 import { current4AMaxPrepsRankingPerformances } from "@/lib/data/current4AMaxPrepsRankings.generated";
 import { current5ABrowserRankingPerformances } from "@/lib/data/current5ABrowserRankings.generated";
 import { current5AMaxPrepsRankingPerformances } from "@/lib/data/current5AMaxPrepsRankings.generated";
-import { currentHokaStVrainMay8Results } from "@/lib/data/currentHokaStVrainMay8Results.generated";
-import { currentMay8Girls4x800Corrections } from "@/lib/data/currentMay8Girls4x800Corrections.generated";
-import { currentMileSplitPerformances } from "@/lib/data/currentPerformances.generated";
+import { currentAthleticLiveLastChancePerformances } from "@/lib/data/currentAthleticLiveLastChanceResults.generated";
+import { currentMileSplitPerformances } from "@/lib/data/currentPerformances";
 import { getEventDefinition } from "@/lib/data/events";
 import { applyClassifications } from "@/lib/services/classification";
 import { comparePerformanceMarks, parsePerformanceMark } from "@/lib/utils/time";
@@ -669,45 +668,6 @@ const mockPerformances: Performance[] = [
   ...supplementalSeeds.map(perf),
 ];
 
-const cetimingMay7Girls800SourceUrl =
-  "https://cetiming.anet.live/meets/71888/events/individual/2683575";
-
-const cetimingMay7Girls800Updates: Performance[] = [
-  perf({ athleteName: "Tereza Koudelka", gender: "Girls", grade: 9, school: "Niwot", event: "800m", markRaw: "2:17.07", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Breckin Lee", gender: "Girls", grade: 9, school: "Niwot", event: "800m", markRaw: "2:17.81", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Sionna Kelly", gender: "Girls", grade: 9, school: "Niwot", event: "800m", markRaw: "2:18.15", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Sammie Holliday", gender: "Girls", grade: 11, school: "Niwot", event: "800m", markRaw: "2:19.14", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Penny Kim", gender: "Girls", grade: 10, school: "Kent Denver", event: "800m", markRaw: "2:19.54", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Lola Carhart", gender: "Girls", grade: 11, school: "Denver East", event: "800m", markRaw: "2:20.60", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Scout Chomas", gender: "Girls", grade: 12, school: "Denver East", event: "800m", markRaw: "2:22.06", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Corrine Kennedy", gender: "Girls", grade: 11, school: "Denver East", event: "800m", markRaw: "2:23.22", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Juliet Huckabay", gender: "Girls", grade: 9, school: "Denver North", event: "800m", markRaw: "2:23.24", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Annie Scherzinger", gender: "Girls", grade: 11, school: "Denver South", event: "800m", markRaw: "2:23.60", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Emily Cook", gender: "Girls", grade: 11, school: "University", event: "800m", markRaw: "2:25.61", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Violet Whitney", gender: "Girls", grade: 12, school: "Lutheran", event: "800m", markRaw: "2:26.93", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Agatha Seibold", gender: "Girls", grade: 12, school: "Chaparral", event: "800m", markRaw: "2:31.45", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Jeremai Guzman", gender: "Girls", grade: 11, school: "Denver North", event: "800m", markRaw: "2:31.59", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Makaela Schoonover", gender: "Girls", grade: 9, school: "Regis Jesuit", event: "800m", markRaw: "2:32.47", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Ashley Istvan", gender: "Girls", grade: 11, school: "Regis Jesuit", event: "800m", markRaw: "2:35.91", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Reena Arabally", gender: "Girls", grade: 9, school: "Castle View", event: "800m", markRaw: "2:36.38", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Mackenzie Schuler", gender: "Girls", grade: 12, school: "Regis Jesuit", event: "800m", markRaw: "2:40.25", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Brooklynne Billmire", gender: "Girls", grade: 11, school: "Simla", event: "800m", markRaw: "2:41.22", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Sydney Bennett", gender: "Girls", grade: 9, school: "Castle View", event: "800m", markRaw: "2:42.20", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Gloria Jourdan", gender: "Girls", grade: 9, school: "Denver South", event: "800m", markRaw: "2:42.79", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Vivienne Hamman", gender: "Girls", grade: 9, school: "Broomfield", event: "800m", markRaw: "2:43.08", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Karina Sarabina", gender: "Girls", grade: 9, school: "Prairie View", event: "800m", markRaw: "2:44.04", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Rebecca Chetwynd", gender: "Girls", grade: 10, school: "Thomas Jefferson", event: "800m", markRaw: "2:44.47", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Harper Jeffries", gender: "Girls", grade: 9, school: "Broomfield", event: "800m", markRaw: "2:44.90", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Kelsi Harr", gender: "Girls", grade: 12, school: "Simla", event: "800m", markRaw: "2:45.45", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Reece Staninger", gender: "Girls", grade: 11, school: "Ponderosa", event: "800m", markRaw: "2:48.02", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Miley Trujillo", gender: "Girls", grade: 11, school: "Prairie View", event: "800m", markRaw: "2:48.38", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Kayla Braman", gender: "Girls", grade: 10, school: "Thomas Jefferson", event: "800m", markRaw: "2:50.03", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Audrey Gladden", gender: "Girls", grade: 11, school: "University", event: "800m", markRaw: "2:50.68", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Valerie Hernandez Vicente", gender: "Girls", grade: 11, school: "University", event: "800m", markRaw: "2:51.03", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Breleigh Payne", gender: "Girls", grade: 9, school: "Ponderosa", event: "800m", markRaw: "2:53.47", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-  perf({ athleteName: "Addison Dea", gender: "Girls", grade: 9, school: "Ponderosa", event: "800m", markRaw: "2:59.53", meetName: "CETiming May 7 Qualifier", meetDate: "2026-05-07", source: "official_timing", sourceUrl: cetimingMay7Girls800SourceUrl }),
-];
-
 function performanceScopeKey(performance: {
   classification?: Classification;
   gender: Gender;
@@ -825,16 +785,6 @@ function preferFreshMaxPrepsRows(performances: Performance[]) {
   });
 }
 
-const hokaResultsWithoutPreliminaryGirls4x800 =
-  currentHokaStVrainMay8Results.filter(
-    (performance) =>
-      !(
-        performance.gender === "Girls" &&
-        performance.event === "4x800m Relay" &&
-        performance.meetName === "HOKA St. Vrain Invitational"
-      ),
-  );
-
 const generatedPerformances = preferFreshMaxPrepsRows(
   enrichMaxPrepsGrades(
     applyClassifications([
@@ -844,9 +794,7 @@ const generatedPerformances = preferFreshMaxPrepsRows(
       ...current4AMaxPrepsRankingPerformances,
       ...current5ABrowserRankingPerformances,
       ...current5AMaxPrepsRankingPerformances,
-      ...cetimingMay7Girls800Updates,
-      ...hokaResultsWithoutPreliminaryGirls4x800,
-      ...currentMay8Girls4x800Corrections,
+      ...currentAthleticLiveLastChancePerformances,
     ]),
   ),
 );

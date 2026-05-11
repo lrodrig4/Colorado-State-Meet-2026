@@ -44,18 +44,17 @@ export function WeekendEntryMeetPanel({
   if (!summaries.length) return null;
 
   return (
-    <section className="coach-surface rounded-2xl">
+    <section className="coach-surface rounded-lg">
       <div className="border-b border-slate-200 p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-950">
               <ListChecks size={18} className="text-[#16324f]" />
-              Weekend entry fields
+              Weekend entries
             </div>
             <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
-              Public MileSplit entries for Windjammer, Friday Night Lights, and
-              Teddy&apos;s. These rows adjust weekend state-mark chance and field
-              quality only; they do not change official rankings until results post.
+              These are public weekend entries. They help planning, but they do
+              not change official rankings until results post.
             </p>
           </div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -82,7 +81,7 @@ export function WeekendEntryMeetPanel({
           </div>
           <div className="rounded-xl bg-rose-50 p-3">
             <div className="text-xs font-semibold uppercase text-rose-700">
-              State-relevant
+              State watch
             </div>
             <div className="mt-1 text-xl font-semibold tabular-nums text-slate-950">
               {stateRelevantCount}
@@ -105,7 +104,7 @@ export function WeekendEntryMeetPanel({
                     {meet.meetName}
                   </div>
                   <p className="mt-1 text-xs font-semibold uppercase text-slate-500">
-                    {shortDate(meet.meetDate)} · {meet.summaries.length} event fields
+                    {shortDate(meet.meetDate)} · {meet.summaries.length} events
                   </p>
                 </div>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
@@ -128,7 +127,7 @@ export function WeekendEntryMeetPanel({
                   className="inline-flex items-center gap-1 text-xs font-semibold text-[#2f6f5e]"
                   target="_blank"
                 >
-                  Open public entries <ExternalLink size={13} />
+                  Open entries <ExternalLink size={13} />
                 </Link>
               ) : null}
 

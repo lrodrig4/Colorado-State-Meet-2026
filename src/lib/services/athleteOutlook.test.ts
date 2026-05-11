@@ -25,6 +25,7 @@ function recommendation(
     meetName: overrides.meetName ?? "Test Meet",
     meetDate: overrides.meetDate ?? "2026-05-01",
     predictedCutoffRaw: overrides.predictedCutoffRaw ?? "5:05.00",
+    predictedCutoffValue: overrides.predictedCutoffValue ?? 305,
     holdProbability: overrides.holdProbability ?? 78,
     holdProbabilityLabel: overrides.holdProbabilityLabel ?? "78%",
     holdConfidenceIntervalLabel: overrides.holdConfidenceIntervalLabel ?? "70-84%",

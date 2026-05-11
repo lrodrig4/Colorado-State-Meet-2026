@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Check, School } from "lucide-react";
 import type { Classification } from "@/types/domain";
@@ -38,6 +38,7 @@ export function FocusTeamSelector({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
   const [teamState, setTeamState] = useState({
     propTeam: currentTeam,
     draftTeam: currentTeam,
@@ -64,17 +65,21 @@ export function FocusTeamSelector({
     params.set(FOCUS_TEAM_QUERY_PARAM, teamToSave);
 
     if (currentQueryTeam !== teamToSave) {
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
       return;
     }
 
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   const dirty = draftTeam !== savedTeam;
 
   return (
-    <div className="col-span-2 flex w-full flex-row items-center gap-2 rounded-xl border border-[#d8e2ea] bg-white p-2 shadow-sm sm:w-auto xl:col-span-1">
+    <div className="col-span-2 flex w-full flex-row items-center gap-2 rounded-lg border border-[#d8e2ea] bg-white p-1.5 shadow-sm sm:w-auto xl:col-span-1">
       <label className="inline-flex h-10 min-w-0 flex-1 items-center gap-2 px-2 text-sm font-semibold text-slate-700">
         <School size={16} className="shrink-0 text-[#0f2a47]" />
         <span className="hidden text-slate-500 sm:inline">{label}</span>
@@ -98,17 +103,18 @@ export function FocusTeamSelector({
       </label>
       <button
         type="button"
-        disabled={!dirty}
+        disabled={!dirty || isPending}
         onClick={saveTeam}
-        className={`coach-action inline-flex min-w-[5.25rem] items-center justify-center gap-2 px-3 text-sm transition ${
+        className={`coach-action inline-flex min-w-[5rem] items-center justify-center gap-2 px-3 text-sm transition ${
           dirty
-            ? "bg-[#102b47] text-white hover:bg-[#163a5d]"
+            ? "app-button-navy"
             : "cursor-default bg-emerald-50 text-emerald-800"
         }`}
         aria-live="polite"
+        aria-busy={isPending}
       >
         <Check size={15} />
-        {dirty ? "Save" : "Saved"}
+        {isPending ? "Saving" : dirty ? "Save" : "Saved"}
       </button>
     </div>
   );

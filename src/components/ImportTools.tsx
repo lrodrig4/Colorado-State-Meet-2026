@@ -65,12 +65,12 @@ export function ImportTools() {
       });
       const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload.error ?? "Source discovery failed.");
+        throw new Error(payload.error ?? "Could not find result links.");
       }
       setDiscovery(payload);
     } catch (error) {
       setDiscoveryError(
-        error instanceof Error ? error.message : "Source discovery failed.",
+        error instanceof Error ? error.message : "Could not find result links.",
       );
     } finally {
       setDiscoveryLoading(false);
@@ -79,11 +79,11 @@ export function ImportTools() {
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
-      <section className="rounded-lg border border-slate-200 bg-white">
+      <section className="app-panel">
         <div className="border-b border-slate-200 p-4">
-          <h2 className="text-base font-semibold">Manual paste parser</h2>
+          <h2 className="text-base font-semibold">Paste results</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Fallback ingestion creates candidate performances for review.
+            Paste copied meet results. The app turns them into rows to check.
           </p>
         </div>
         <div className="grid gap-4 p-4">
@@ -93,7 +93,7 @@ export function ImportTools() {
               <input
                 value={meetName}
                 onChange={(event) => setMeetName(event.target.value)}
-                className="h-10 rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-[#2f6f5e] focus:ring-2 focus:ring-[#2f6f5e]/15"
+                className="app-input h-10"
               />
             </label>
             <label className="grid gap-1 text-sm font-medium text-slate-700">
@@ -102,7 +102,7 @@ export function ImportTools() {
                 type="date"
                 value={meetDate}
                 onChange={(event) => setMeetDate(event.target.value)}
-                className="h-10 rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-[#2f6f5e] focus:ring-2 focus:ring-[#2f6f5e]/15"
+                className="app-input h-10"
               />
             </label>
           </div>
@@ -117,10 +117,10 @@ export function ImportTools() {
               type="button"
               onClick={parseManual}
               disabled={manualLoading}
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-[#16324f] px-4 text-sm font-semibold text-white disabled:opacity-60"
+              className="coach-action app-button-navy inline-flex h-10 items-center gap-2 px-4 text-sm disabled:opacity-60"
             >
               {manualLoading ? <Loader2 className="animate-spin" size={16} /> : <PlusCircle size={16} />}
-              Parse candidates
+              Read pasted results
             </button>
             {manualError ? (
               <span className="text-sm font-medium text-red-700">{manualError}</span>
@@ -128,7 +128,7 @@ export function ImportTools() {
           </div>
           {manualResult.length > 0 ? (
             <div className="overflow-hidden rounded-md border border-slate-200">
-              <table className="w-full table-fixed text-left text-sm">
+                <table className="app-data-table table-fixed">
                 <colgroup>
                   <col className="w-[22%]" />
                   <col className="w-[24%]" />
@@ -137,25 +137,25 @@ export function ImportTools() {
                   <col className="w-[12%]" />
                   <col className="w-[12%]" />
                 </colgroup>
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <thead>
                   <tr>
-                    <th className="px-3 py-2">Athlete</th>
-                    <th className="px-3 py-2">School</th>
-                    <th className="px-3 py-2">Event</th>
-                    <th className="px-3 py-2">Mark</th>
-                    <th className="px-3 py-2">Timing</th>
-                    <th className="px-3 py-2">Status</th>
+                    <th>Athlete</th>
+                    <th>School</th>
+                    <th>Event</th>
+                    <th>Mark</th>
+                    <th>Timing</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {manualResult.map((row) => (
                     <tr key={row.id} className="border-t border-slate-100">
-                      <td className="break-words px-3 py-2 font-medium">{row.athleteName}</td>
-                      <td className="break-words px-3 py-2">{row.school}</td>
-                      <td className="break-words px-3 py-2">{row.event}</td>
-                      <td className="px-3 py-2 font-semibold tabular-nums">{row.markRaw}</td>
-                      <td className="px-3 py-2">{row.timingType}</td>
-                      <td className="px-3 py-2">
+                      <td className="break-words font-medium">{row.athleteName}</td>
+                      <td className="break-words">{row.school}</td>
+                      <td className="break-words">{row.event}</td>
+                      <td className="font-semibold tabular-nums">{row.markRaw}</td>
+                      <td>{row.timingType}</td>
+                      <td>
                         <StatusBadge status={row.verificationStatus} />
                       </td>
                     </tr>
@@ -167,11 +167,11 @@ export function ImportTools() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white">
+      <section className="app-panel">
         <div className="border-b border-slate-200 p-4">
-          <h2 className="text-base font-semibold">Source discovery</h2>
+          <h2 className="text-base font-semibold">Find result link</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Crawl a meet page and rank outbound result links.
+            Paste a meet page link. The app looks for the real results page.
           </p>
         </div>
         <div className="grid gap-4 p-4">
@@ -186,7 +186,7 @@ export function ImportTools() {
                 value={discoveryUrl}
                 onChange={(event) => setDiscoveryUrl(event.target.value)}
                 placeholder="https://co.milesplit.com/meets/..."
-                className="h-10 w-full rounded-md border border-slate-300 pl-9 pr-3 text-sm outline-none focus:border-[#2f6f5e] focus:ring-2 focus:ring-[#2f6f5e]/15"
+                className="app-input h-10 pl-9"
               />
             </div>
           </label>
@@ -194,10 +194,10 @@ export function ImportTools() {
             type="button"
             onClick={discoverSources}
             disabled={!discoveryUrl || discoveryLoading}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#2f6f5e] px-4 text-sm font-semibold text-white disabled:opacity-60"
+            className="coach-action app-button-primary inline-flex h-10 items-center justify-center gap-2 px-4 text-sm disabled:opacity-60"
           >
             {discoveryLoading ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
-            Discover sources
+            Find results
           </button>
           {discoveryError ? (
             <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -207,7 +207,7 @@ export function ImportTools() {
           {discovery ? (
             <div className="space-y-3">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-                <div className="font-semibold">Primary</div>
+                <div className="font-semibold">Best result link</div>
                 <div className="mt-1 break-all text-slate-700">
                   {discovery.primaryResultsUrl ?? "No primary source found"}
                 </div>

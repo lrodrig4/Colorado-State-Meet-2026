@@ -176,6 +176,14 @@ test("finds MileSplit school-name variants from CHSAA track classifications", ()
 test("preserves gender-specific Englewood classification behavior", () => {
   assert.equal(findSchool("Englewood", "Boys")?.classification, "3A");
   assert.equal(findSchool("Englewood", "Girls")?.classification, "4A");
+  assert.equal(
+    findSchool("Englewood High School (Boys)", "Boys")?.classification,
+    "3A",
+  );
+  assert.equal(
+    findSchool("Englewood High School (Girls)", "Girls")?.classification,
+    "4A",
+  );
   assert.equal(findSchool("Englewood"), undefined);
 });
 

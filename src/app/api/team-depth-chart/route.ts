@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTeamDepthChart } from "@/lib/services/appData";
+import { apiError } from "@/lib/server/api";
 import {
   CLASSIFICATION_QUERY_PARAM,
   resolveClassification,
@@ -12,14 +13,15 @@ export async function GET(request: Request) {
     searchParams.get(CLASSIFICATION_QUERY_PARAM) ?? undefined,
   );
 
-  if (!team) {
-    return NextResponse.json(
-      { error: "Missing team query parameter." },
-      { status: 400 },
-    );
+  if (!team?.trim()) {
+    return apiError("Missing team query parameter.");
   }
 
-  const depthChart = getTeamDepthChart(classification, team);
+  if (team.length > 160) {
+    return apiError("team query parameter is too long.");
+  }
+
+  const depthChart = await getTeamDepthChart(classification, team.trim());
 
   return NextResponse.json(depthChart, {
     headers: {

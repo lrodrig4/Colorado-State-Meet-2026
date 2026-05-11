@@ -32,7 +32,7 @@ export function AutoUpdatePanel({ policy }: { policy: AutoUpdatePolicy }) {
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white">
+    <section className="app-panel">
       <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-base font-semibold">Auto-update pipeline</h2>
@@ -44,7 +44,7 @@ export function AutoUpdatePanel({ policy }: { policy: AutoUpdatePolicy }) {
           type="button"
           onClick={runNow}
           disabled={loading}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#2f6f5e] px-4 text-sm font-semibold text-white disabled:opacity-60"
+          className="coach-action app-button-primary inline-flex h-10 items-center justify-center gap-2 px-4 text-sm disabled:opacity-60"
         >
           {loading ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />}
           Run dry check

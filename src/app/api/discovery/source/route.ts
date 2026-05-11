@@ -1,19 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { discoverSourcesFromHtml, discoverSourcesFromUrl } from "@/lib/services/sourceDiscovery";
+import {
+  ApiRequestError,
+  handleApiError,
+  optionalString,
+  readJsonObject,
+  requiredString,
+} from "@/lib/server/api";
+import { parseSafeHttpUrl, SafeFetchError } from "@/lib/server/safeFetch";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => null);
+  try {
+    const body = await readJsonObject(request, { maxBytes: 650_000 });
+    const html = optionalString(body, "html", {
+      maxLength: 600_000,
+      trim: false,
+    });
+    const url = html
+      ? optionalString(body, "url", { maxLength: 2_048 })
+      : requiredString(body, "url", { maxLength: 2_048 });
 
-  if (!body?.url && !body?.html) {
-    return NextResponse.json(
-      { error: "Provide a meet page url or raw html." },
-      { status: 400 },
-    );
+    if (!url && !html) {
+      throw new ApiRequestError("Provide a meet page url or raw html.");
+    }
+
+    const baseUrl = parseSafeHttpUrl(url ?? "https://co.milesplit.com/").toString();
+    const result = html
+      ? discoverSourcesFromHtml(html, baseUrl)
+      : await discoverSourcesFromUrl(baseUrl);
+
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof SafeFetchError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    return handleApiError(error);
   }
-
-  const result = body.html
-    ? discoverSourcesFromHtml(body.html, body.url ?? "https://co.milesplit.com/")
-    : await discoverSourcesFromUrl(body.url);
-
-  return NextResponse.json(result);
 }

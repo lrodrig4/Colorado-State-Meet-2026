@@ -308,7 +308,7 @@ export function IndividualDecisionFlowchart({
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-950">
               <GitBranch size={18} className="text-[#16324f]" />
-              Individual and relay weekend flowchart
+              Athlete and relay choices
             </div>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
               Pick an athlete or relay from {focusTeam}, then walk through St.

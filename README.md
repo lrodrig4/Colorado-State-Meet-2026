@@ -1,6 +1,6 @@
-# Colorado State Meet Command Center
+# Colorado Distance Intel
 
-Mobile-first CHSAA 3A/4A/5A state-qualification tracker for coaches. The app combines public rankings, verified meet results, historical state cutoffs, St. Vrain/last-chance entries, depth charts, relay pools, and virtual state scoring.
+Coach-first CHSAA 3A/4A/5A distance intelligence for rankings, state qualification, team scoring, race previews, and meet strategy. The current MVP is a track state-week command center; the XC intelligence layer comes next. The current app combines public rankings, verified meet results, historical state cutoffs, St. Vrain/last-chance entries, depth charts, relay pools, and virtual state scoring.
 
 ## What It Does
 
@@ -10,6 +10,7 @@ Mobile-first CHSAA 3A/4A/5A state-qualification tracker for coaches. The app com
 - Builds team depth charts and relay pools from current season marks.
 - Runs virtual state meet scoring using CHSAA 9-place scoring: `10-8-7-6-5-4-3-2-1`.
 - Lets coaches inspect St. Vrain and last-chance scenarios without editing source code.
+- Adds public `Distance Intel` and `Coach Pro` surfaces for the larger content/subscription direction.
 
 ## Local Setup
 
@@ -24,8 +25,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 npm run build
-npm run test
+npm test
 npm run deploy:prod
+```
+
+Print a ranking directly from the data layer:
+
+```bash
+npm run rank -- --class=4A --gender=Girls --event="4x800m Relay" --top=50
 ```
 
 ## Data Refresh Commands

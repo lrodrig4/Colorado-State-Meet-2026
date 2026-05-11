@@ -165,7 +165,7 @@ export function WeekendScenarioBracket({
           </div>
 
           <div className="mt-4 overflow-hidden">
-            <table className="w-full table-fixed border-collapse text-left text-sm">
+            <table className="app-data-table table-fixed">
               <colgroup>
                 <col className="w-[13%]" />
                 <col className="w-[20%]" />
@@ -174,7 +174,7 @@ export function WeekendScenarioBracket({
                 <col className="w-[11%]" />
                 <col className="w-[22%]" />
               </colgroup>
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead>
                 <tr>
                   <th className="px-3 py-3 font-semibold">Call</th>
                   <th className="px-3 py-3 font-semibold">Athlete / relay</th>

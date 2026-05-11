@@ -23,6 +23,7 @@ function recommendation(
     meetName: "Test Meet",
     meetDate: "2026-05-01",
     predictedCutoffRaw: "11:22.00",
+    predictedCutoffValue: 682,
     holdProbability: 8,
     holdProbabilityLabel: "8%",
     holdConfidenceIntervalLabel: "4-12%",

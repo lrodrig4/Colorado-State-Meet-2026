@@ -4,7 +4,7 @@ import { performances } from "@/lib/data/performances";
 import { applyClassifications } from "@/lib/services/classification";
 import { buildRelayChaseDecisions } from "@/lib/services/relayStrategy";
 
-test("flags unqualified relays when a senior individual bubble runner is the trade-off", () => {
+test("flags lineup risk when a senior individual bubble runner is the trade-off", () => {
   const decisions = buildRelayChaseDecisions(
     applyClassifications(performances),
     "4A",
@@ -16,8 +16,8 @@ test("flags unqualified relays when a senior individual bubble runner is the tra
   );
 
   assert.ok(boysFourByEight);
-  assert.equal(boysFourByEight.currentRankLabel, "B3");
-  assert.equal(boysFourByEight.call, "Protect individuals");
+  assert.equal(boysFourByEight.currentRankLabel, "#18");
+  assert.equal(boysFourByEight.call, "Conditional chase");
   assert.equal(
     boysFourByEight.lineup.some(
       (candidate) =>
@@ -27,7 +27,7 @@ test("flags unqualified relays when a senior individual bubble runner is the tra
     ),
     true,
   );
-  assert.match(boysFourByEight.summary, /Noah Thompson/);
+  assert.match(boysFourByEight.summary, /not an automatic priority/i);
   assert.match(boysFourByEight.tradeoffSummary, /senior with one qualifying weekend left/i);
   assert.match(
     boysFourByEight.repeatabilityLabel,

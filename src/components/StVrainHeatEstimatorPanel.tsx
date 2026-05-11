@@ -123,35 +123,32 @@ export function StVrainHeatEstimatorPanel({
 
   if (!estimates.length) {
     return (
-      <section className="coach-surface rounded-2xl p-5">
+      <section className="coach-surface rounded-lg p-5">
         <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-950">
           <RadioTower size={18} className="text-[#16324f]" />
-          St. Vrain entries and analysis
+          St. Vrain entries
         </div>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Live HOKA entries could not be loaded from the public AthleticLIVE
-          feed yet. The field forecast below still uses the registered team
-          list and state-bubble model.
+          Live HOKA entries could not load yet. The forecast still uses the
+          registered team list and current ranking data.
         </p>
       </section>
     );
   }
 
   return (
-    <section className="coach-surface rounded-2xl">
+    <section className="coach-surface rounded-lg">
       <div className="border-b border-slate-200 p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-950">
               <RadioTower size={18} className="text-[#16324f]" />
-              St. Vrain entries and analysis
+              St. Vrain entries
             </div>
             <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-600">
-              Uses the live HOKA entry feed plus the published 2026 heat-count
-              schedule. Fast-section cuts are estimates, but seed ranks and
-              marks come from the public live entries. Every event below shows
-              estimated heats or flights, state-mark odds, and the biggest
-              coach-planning storylines.
+              Uses live HOKA entries and the published heat schedule. Open an
+              event to see likely sections, state-mark chances, and simple
+              planning notes.
             </p>
           </div>
           <span className="rounded-full bg-[#f0faf6] px-3 py-1 text-xs font-semibold text-[#2f6f5e] ring-1 ring-[#b8ead9]">
@@ -178,7 +175,7 @@ export function StVrainHeatEstimatorPanel({
           </div>
           <div className="rounded-xl bg-emerald-50 p-3 sm:p-3">
             <div className="text-xs font-semibold uppercase text-emerald-700">
-              Estimated sections
+              Sections
             </div>
             <div className="mt-1 text-xl font-semibold tabular-nums text-slate-950 sm:text-2xl">
               {estimatedHeatCount}
@@ -186,7 +183,7 @@ export function StVrainHeatEstimatorPanel({
           </div>
           <div className="rounded-xl bg-rose-50 p-3 sm:p-3">
             <div className="text-xs font-semibold uppercase text-rose-700">
-              Race targets
+              Things to watch
             </div>
             <div className="mt-1 text-xl font-semibold tabular-nums text-slate-950 sm:text-2xl">
               {racePlanCount}
@@ -202,7 +199,7 @@ export function StVrainHeatEstimatorPanel({
           return (
           <article
             key={estimate.id}
-            className="rounded-2xl border border-slate-200 bg-white shadow-sm"
+            className="rounded-lg border border-slate-200 bg-white shadow-sm"
           >
             <button
               type="button"
@@ -232,7 +229,7 @@ export function StVrainHeatEstimatorPanel({
                     all {estimate.sectionNounPlural} included
                   </span>
                   <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
-                    tap to open {estimate.sectionNoun} sheet
+                    tap to open
                   </span>
                 </div>
                 <p className="mt-1 text-xs font-semibold text-[#2f6f5e]">
@@ -561,7 +558,7 @@ export function StVrainHeatEstimatorPanel({
 
                 {!estimate.racePlans.length ? (
                   <div className="rounded-lg border border-dashed border-slate-200 p-4 text-sm leading-6 text-slate-600">
-                    Live entries loaded, but no selected-team or state-bubble
+                    Live entries loaded, but no selected-team or state-watch
                     race targets were found for this event.
                   </div>
                 ) : null}

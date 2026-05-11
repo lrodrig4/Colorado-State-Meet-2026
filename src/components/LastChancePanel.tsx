@@ -106,74 +106,8 @@ function modeButtonClass(active: boolean) {
   }`;
 }
 
-function scratchRiskClass(probability: number) {
-  if (probability >= 65) {
-    return "bg-rose-100 text-rose-800";
-  }
-
-  if (probability >= 45) {
-    return "bg-amber-100 text-amber-800";
-  }
-
-  return "bg-slate-100 text-slate-700";
-}
-
-function chanceText(probability: number) {
-  if (probability >= 90) {
-    return {
-      detail: "Current mark should hold",
-      bar: "bg-emerald-500",
-      text: "text-emerald-800",
-      bg: "bg-emerald-50",
-    };
-  }
-
-  if (probability >= 68) {
-    return {
-      detail: "Strong, but watch",
-      bar: "bg-lime-500",
-      text: "text-lime-800",
-      bg: "bg-lime-50",
-    };
-  }
-
-  if (probability >= 54) {
-    return {
-      detail: "Could go either way",
-      bar: "bg-amber-500",
-      text: "text-amber-800",
-      bg: "bg-amber-50",
-    };
-  }
-
-  if (probability >= 40) {
-    return {
-      detail: "Needs a PR",
-      bar: "bg-orange-500",
-      text: "text-orange-800",
-      bg: "bg-orange-50",
-    };
-  }
-
-  if (probability >= 24) {
-    return {
-      detail: "Needs big PR",
-      bar: "bg-rose-500",
-      text: "text-rose-800",
-      bg: "bg-rose-50",
-    };
-  }
-
-  return {
-    detail: "Low odds",
-    bar: "bg-slate-400",
-    text: "text-slate-700",
-    bg: "bg-slate-50",
-  };
-}
-
 function entryWindowLabel(rank: number) {
-  return rank <= 18 ? "Top 18" : "Bubble";
+  return rank <= 18 ? "In field" : "Just outside";
 }
 
 function entryWindowClass(rank: number) {
@@ -252,6 +186,146 @@ function seededEventSort(a: LastChanceRecommendation, b: LastChanceRecommendatio
   );
 }
 
+type FriendlyRead = {
+  label: string;
+  detail: string;
+  tone: EventEntryForecastRow["projectedEntryTone"];
+};
+
+function scoreRead(row: LastChanceRecommendation): FriendlyRead {
+  const definition = getEventDefinition(row.event);
+
+  if (row.rank <= 9 && row.scratchProbability >= 35) {
+    return {
+      label: "Scores if entered",
+      detail: `${row.rankLabel} is in scoring range, but the drop chance needs a coach check.`,
+      tone: "amber",
+    };
+  }
+
+  if (row.rank <= 9) {
+    return {
+      label: definition.relay ? "Relay scores" : "Scores",
+      detail: `${row.rankLabel} is inside the top-nine scoring positions.`,
+      tone: "emerald",
+    };
+  }
+
+  if (row.rank <= 18) {
+    return {
+      label: "In field",
+      detail: "Currently in the state field, not projected to score from seed.",
+      tone: "sky",
+    };
+  }
+
+  if (row.expectedScratchOpenings >= 0.5) {
+    return {
+      label: "Could get pulled in",
+      detail: "Needs someone ahead to drop or a better mark to enter the field.",
+      tone: "amber",
+    };
+  }
+
+  return {
+    label: "Needs better mark",
+    detail: "Outside the field right now.",
+    tone: "slate",
+  };
+}
+
+function scratchRead(row: LastChanceRecommendation): FriendlyRead {
+  const definition = getEventDefinition(row.event);
+
+  if (definition.relay) {
+    return {
+      label: "Relay stays listed",
+      detail: "Relays are treated as contested unless a coach manually removes them.",
+      tone: "sky",
+    };
+  }
+
+  if (row.netScratchCall === "Likely scratch" || row.scratchProbability >= 55) {
+    return {
+      label: "Likely drop",
+      detail: "Model sees a stronger event load or team-points path elsewhere.",
+      tone: "rose",
+    };
+  }
+
+  if (row.netScratchCall === "Maybe scratch" || row.scratchProbability >= 35) {
+    return {
+      label: "May drop",
+      detail: "Worth checking against the athlete's other state entries.",
+      tone: "amber",
+    };
+  }
+
+  if (row.scratchProbability >= 18) {
+    return {
+      label: "Check",
+      detail: "Some load pressure, but not enough to call a drop.",
+      tone: "amber",
+    };
+  }
+
+  return {
+    label: "Keep entered",
+    detail: "No strong drop signal from the loaded marks.",
+    tone: "emerald",
+  };
+}
+
+function scratchPredictionRead(row: ScratchPrediction): FriendlyRead {
+  if (row.netScratchCall === "Likely scratch" || row.scratchProbability >= 55) {
+    return {
+      label: "Likely drop",
+      detail: row.scratchTradeoffExplanation,
+      tone: "rose",
+    };
+  }
+
+  if (row.scratchProbability >= 35 || row.netScratchCall === "Maybe scratch") {
+    return {
+      label: "May drop",
+      detail: row.scratchTradeoffExplanation,
+      tone: "amber",
+    };
+  }
+
+  return {
+    label: "Check",
+    detail: row.scratchTradeoffExplanation,
+    tone: "slate",
+  };
+}
+
+function stVrainRead(opportunity: StVrainStateMarkOpportunity): FriendlyRead {
+  const toneByChance: Record<
+    StVrainStateMarkOpportunity["chanceTone"],
+    EventEntryForecastRow["projectedEntryTone"]
+  > = {
+    green: "emerald",
+    amber: "amber",
+    rose: "rose",
+    slate: "slate",
+  };
+  const label =
+    opportunity.heatAdjustedChance >= 65
+      ? "Strong state-mark path"
+      : opportunity.heatAdjustedChance >= 35
+        ? "State-mark watch"
+        : opportunity.heatAdjustedChance >= 15
+          ? "Needs clean race"
+          : "Long shot";
+
+  return {
+    label,
+    detail: `${opportunity.neededImprovementLabel}; ${opportunity.profileLabel.toLowerCase()}, ${opportunity.heatAdjustmentLabel}.`,
+    tone: toneByChance[opportunity.chanceTone],
+  };
+}
+
 function projectedEdgePick(
   rows: LastChanceRecommendation[],
   prediction?: CutoffPrediction,
@@ -294,7 +368,9 @@ function projectedEdgePick(
     row: best.row,
     confidence,
     nextNames,
-    reason: `${best.row.markRaw} is closest to the projected cut ${prediction.predictedCutoffRaw}; state odds ${best.row.stateProbabilityLabel}, hold odds ${best.row.holdProbabilityLabel}, scratch prediction ${best.row.scratchRiskLabel.toLowerCase()} ${best.row.scratchProbabilityLabel}.`,
+    reason: `${best.row.markRaw} is closest to the projected cut ${prediction.predictedCutoffRaw}; ${scoreRead(
+      best.row,
+    ).label.toLowerCase()}, ${scratchRead(best.row).label.toLowerCase()}.`,
   };
 }
 
@@ -311,7 +387,7 @@ function buildCoachSummary(rows: LastChanceRecommendation[], focusTeam: string) 
     .slice(0, 18);
 
   if (!urgent.length) {
-    return `${focusTeam}: no urgent last-chance priorities in the current Top 18/bubble window.`;
+    return `${focusTeam}: no urgent priorities in the current state-field window.`;
   }
 
   return [
@@ -319,8 +395,10 @@ function buildCoachSummary(rows: LastChanceRecommendation[], focusTeam: string) 
     ...urgent.map(
       (row) => {
         const call = coachCall(row);
+        const score = scoreRead(row);
+        const scratch = scratchRead(row);
 
-        return `${call.label}: ${row.eventLabel} - ${row.athleteName}, ${row.rankLabel}, ${row.markRaw}, ${row.gapRaw}, state odds ${row.stateProbabilityLabel} (range ${row.stateConfidenceIntervalLabel}), hold odds ${row.holdProbabilityLabel} (range ${row.holdConfidenceIntervalLabel}), improve odds ${row.improveProbabilityLabel} (range ${row.improveConfidenceIntervalLabel}), scratch prediction ${row.scratchRiskLabel} ${row.scratchProbabilityLabel} (range ${row.scratchConfidenceIntervalLabel}). ${row.recommendation}`;
+        return `${call.label}: ${row.eventLabel} - ${row.athleteName}, ${row.rankLabel}, ${row.markRaw}, ${row.gapRaw}. Point chance: ${score.label}. Drop chance: ${scratch.label}. ${row.recommendation}`;
       },
     ),
   ].join("\n");
@@ -419,7 +497,16 @@ export function LastChancePanel({
         stVrainOpportunityKey(selectedAthlete.athleteName, selectedAthlete.school),
       )
     : undefined;
-  const topScratchPredictions = scratchPredictions.slice(0, 12);
+  const eventScratchPredictions = useMemo(() => {
+    const sample = eventRecommendations[0];
+
+    return sample
+      ? scratchPredictions.filter(
+          (row) => row.gender === sample.gender && row.event === sample.event,
+        )
+      : [];
+  }, [eventRecommendations, scratchPredictions]);
+  const topScratchPredictions = eventScratchPredictions.slice(0, 12);
 
   async function copySummary() {
     await navigator.clipboard.writeText(
@@ -440,16 +527,16 @@ export function LastChancePanel({
   }
 
   return (
-    <section className="coach-surface mb-5 overflow-hidden rounded-2xl">
+    <section className="coach-surface mb-5 overflow-hidden rounded-lg">
       <div className="flex flex-col gap-4 border-b border-[#d8e2ea] bg-[#fbfcfd]/80 p-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <div className="coach-kicker">Top 18 cutline</div>
+          <div className="coach-kicker">State field</div>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
             {eventTitle}
           </h2>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-            Seeded field first. Open athlete names for other events, relay likelihood,
-            scratch risk, and the model&apos;s meet-week call.
+            Start with who is in. Open an athlete name to see other events,
+            relay notes, and whether they may drop this event.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -459,7 +546,7 @@ export function LastChancePanel({
             className="coach-action inline-flex items-center justify-center gap-2 border border-slate-300 bg-white px-3 text-sm text-slate-700 hover:bg-slate-50"
           >
             <Clipboard size={16} />
-            {copied ? "Copied" : "Copy coach summary"}
+            {copied ? "Copied" : "Copy summary"}
           </button>
           <button
             type="button"
@@ -475,14 +562,14 @@ export function LastChancePanel({
       <div className="grid grid-cols-2 gap-0 border-b border-[#d8e2ea] xl:grid-cols-5">
         <div className="border-b border-slate-200 p-3 sm:border-r sm:p-4 xl:border-b-0">
           <div className="coach-kicker">
-            Predicted cutoff
+            Predicted last mark
           </div>
           <div className="mt-1 text-xl font-semibold tabular-nums text-slate-950 sm:text-2xl">
             {prediction?.predictedCutoffRaw ?? "N/A"}
           </div>
           <div className="mt-1 text-xs text-slate-500">
             {prediction
-              ? `${prediction.confidenceScoreLabel} confidence, ${prediction.movementRaw} movement${
+              ? `${prediction.confidence} confidence, ${prediction.movementRaw} movement${
                   prediction.historicalCutoffRaw
                     ? `, historical avg ${prediction.historicalCutoffRaw}`
                     : ""
@@ -503,10 +590,10 @@ export function LastChancePanel({
         </div>
         <div className="border-b border-slate-200 p-3 sm:border-r sm:p-4 xl:border-b-0">
           <div className="coach-kicker">
-            Cutoff confidence
+            Confidence
           </div>
           <div className="mt-1 text-xl font-semibold tabular-nums text-slate-950 sm:text-2xl">
-            {prediction?.confidenceScoreLabel ?? "N/A"}
+            {prediction?.confidence ?? "N/A"}
           </div>
           <div className="mt-1 text-xs text-slate-500">
             {prediction?.sourceCoverageLabel ?? "Public sources only"}
@@ -514,7 +601,7 @@ export function LastChancePanel({
         </div>
         <div className="border-b border-slate-200 p-3 sm:p-4 xl:border-b-0 xl:border-r">
           <div className="coach-kicker">
-            First bubble
+            First out
           </div>
           <div className="mt-1 text-xl font-semibold tabular-nums text-slate-950 sm:text-2xl">
             {prediction?.firstBubbleRaw ?? "N/A"}
@@ -531,7 +618,7 @@ export function LastChancePanel({
             {urgentCount}
           </div>
           <div className="mt-1 text-xs text-slate-500">
-            Must race, bubble, or PR needed
+            Need a race, PR, or coach check
           </div>
         </div>
       </div>
@@ -540,7 +627,7 @@ export function LastChancePanel({
         <div className="grid gap-3 border-b border-slate-200 bg-[#fbfcfd] p-4 lg:grid-cols-[220px_1fr_1fr] lg:items-center">
           <div>
             <div className="text-xs font-semibold uppercase text-slate-500">
-              Projected #18 pick
+              Likely last spot
             </div>
             {getEventDefinition(edgePick.row.event).relay ? (
               <div className="mt-1 text-xl font-semibold text-slate-950">
@@ -560,7 +647,7 @@ export function LastChancePanel({
             <span className="font-semibold text-slate-950">
               {edgePick.row.rankLabel} · {edgePick.row.markRaw}
             </span>{" "}
-            is the current model&apos;s best edge pick. Confidence:{" "}
+            is the app&apos;s current pick for the last spot. Confidence:{" "}
             <span className="font-semibold text-slate-950">
               {edgePick.confidence}
             </span>
@@ -583,23 +670,14 @@ export function LastChancePanel({
           <div className="grid gap-2 xl:grid-cols-2">
             <InsightDisclosure
               icon={<ShieldCheck size={18} />}
-              title="How to read odds"
-              summary="State odds, hold odds, improve odds, scratch odds, and pull-in openings are separate."
+              title="How to read this"
+              summary="Each row says if the athlete is scoring, in the field, just outside, or may drop the event."
             >
               <p>
-                State odds include the projected cutoff and scratch model. Hold
-                odds show whether this exact mark survives if unchanged. Improve
-                odds are the separate chance of getting the needed PR or seed
-                jump. Scratch odds are separate from pull-in odds: seeded
-                athletes get a scratch risk, while bubble athletes show modeled
-                openings ahead. Distance runners are checked for 800/1600/3200
-                profile fit before a scratch call is made. Relays are treated as
-                declared and contested by default. Throws stay very low scratch
-                unless the athlete also has a full track-event load. Top
-                sprint/hurdle scoring seeds are protected before relay pressure
-                is allowed to affect the model. Relay pressure only counts when
-                the athlete projects as a relay leg, alternate, or fringe
-                candidate from that school&apos;s loaded depth chart.
+                Top nine score. Ranks 10-18 are in the state field. Rows
+                outside the field need a better mark or an opening. The drop
+                read checks event load, schedule pressure, team points, and
+                relay conflicts.
               </p>
             </InsightDisclosure>
 
@@ -631,7 +709,7 @@ export function LastChancePanel({
 
             <InsightDisclosure
               icon={<History size={18} />}
-              title="Historical trend"
+              title="Past years"
               summary={
                 prediction.historicalBestCutoffRaw
                   ? `Hardest loaded 18th: ${prediction.historicalBestCutoffRaw} (${prediction.historicalBestCutoffYear})`
@@ -651,8 +729,8 @@ export function LastChancePanel({
 
             <InsightDisclosure
               icon={<Activity size={18} />}
-              title="Model inputs"
-              summary={`Confidence: ${prediction.confidenceScoreLabel}. Late-wave pressure ${prediction.lateWaveRaw}.`}
+              title="Why the app says this"
+              summary={`Confidence: ${prediction.confidence}. Late-wave pressure ${prediction.lateWaveRaw}.`}
             >
               <p>
                 {prediction.confidenceSummary} {prediction.method}{" "}
@@ -695,10 +773,10 @@ export function LastChancePanel({
         </div>
         <p className="text-sm text-slate-600">
           {mode === "palmer"
-            ? `${focusTeam} priorities across every ${classification} event.`
+            ? `${focusTeam} things to check across every ${classification} event.`
             : mode === "event"
-              ? `${eventTitle} seeded Top 18 first, then the bubble.`
-              : `Likely last-chance targets from every ${classification} team.`}
+              ? `${eventTitle}: athletes in first, then athletes just outside.`
+              : `Things to check from every ${classification} team.`}
         </p>
       </div>
 
@@ -707,11 +785,11 @@ export function LastChancePanel({
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <h3 className="text-sm font-semibold text-slate-950">
-                Projected Top 18 and bubble
+                In the field and just outside
               </h3>
               <p className="mt-1 text-xs leading-5 text-slate-600">
-                Rank, mark, state odds, hold/improve odds, and scratch or
-                pull-in read are grouped for phone scanning.
+                Rank, mark, point chance, and drop chance are grouped for easy
+                reading.
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold leading-5 text-slate-800 md:text-sm">
@@ -724,17 +802,21 @@ export function LastChancePanel({
         <div className="grid gap-3 p-3 md:grid-cols-2 2xl:grid-cols-3">
           {visibleRows.map((row) => {
             const action = coachCall(row);
-            const chance = chanceText(row.stateProbability);
             const canInspectAthlete = !getEventDefinition(row.event).relay;
             const forecast = eventForecastById.get(row.id);
+            const score = scoreRead(row);
+            const scratch = scratchRead(row);
             const stVrainOpportunity = stVrainOpportunityByKey.get(
               stVrainOpportunityKey(row.athleteName, row.school),
             );
+            const stVrainReadout = stVrainOpportunity
+              ? stVrainRead(stVrainOpportunity)
+              : undefined;
 
           return (
             <article
               key={`${mode}-${row.id}-card`}
-              className={`rounded-2xl border p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+              className={`rounded-lg border p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
                 row.isFocusTeam
                   ? "border-emerald-300 bg-emerald-50/60"
                   : row.rank <= 18
@@ -805,7 +887,7 @@ export function LastChancePanel({
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-semibold uppercase text-slate-500">
-                      Weekend
+                      Last chance
                     </div>
                     <ForecastBadge
                       label={forecast.weekendRaceLabel}
@@ -815,7 +897,7 @@ export function LastChancePanel({
                 </div>
               ) : null}
 
-              {stVrainOpportunity ? (
+              {stVrainOpportunity && stVrainReadout ? (
                 <div className="mt-3 rounded-md border border-sky-200 bg-sky-50 p-2">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
@@ -827,81 +909,41 @@ export function LastChancePanel({
                         {stVrainOpportunity.targetMarkRaw}
                       </div>
                     </div>
-                            <div className="text-left sm:text-right">
-                      <div className="text-lg font-semibold tabular-nums text-slate-950">
-                        {stVrainOpportunity.heatAdjustedChanceLabel}
-                      </div>
-                      <div className="text-[10px] font-semibold uppercase text-slate-500">
-                        in this {stVrainOpportunity.sectionNoun}
-                      </div>
+                    <div className="text-left sm:text-right">
+                      <ForecastBadge
+                        label={stVrainReadout.label}
+                        tone={stVrainReadout.tone}
+                      />
                     </div>
                   </div>
                   <p className="mt-1 text-xs leading-5 text-slate-600">
-                    {stVrainOpportunity.neededImprovementLabel};{" "}
-                    {stVrainOpportunity.profileLabel.toLowerCase()},{" "}
-                    {stVrainOpportunity.heatAdjustmentLabel}.
+                    {stVrainReadout.detail}
                   </p>
                 </div>
               ) : null}
 
               <div className="mt-3 flex flex-wrap gap-2">
+                <ForecastBadge label={score.label} tone={score.tone} />
+                <ForecastBadge label={scratch.label} tone={scratch.tone} />
                 <span
-                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${coachCallClass(
+                  className={`inline-flex w-fit max-w-full justify-center rounded-full px-2 py-1 text-center text-[11px] font-semibold leading-4 sm:px-2.5 sm:text-xs ${coachCallClass(
                     action,
                   )}`}
                 >
                   {action.label}
                 </span>
-                <span
-                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${scratchRiskClass(
-                    row.scratchProbability,
-                  )}`}
-                >
-                  {row.rank > 18
-                    ? `Pull-in ${row.expectedScratchOpenings.toFixed(1)}`
-                    : `Scratch ${row.scratchProbabilityLabel}`}
-                </span>
               </div>
 
-              <div className={`mt-3 rounded-md border border-slate-200 ${chance.bg} p-3`}>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className={`text-[10px] font-semibold uppercase tracking-wide ${chance.text}`}>
-                      State
-                    </div>
-                    <div className="text-xs font-semibold leading-4 text-slate-700">
-                      {row.oddsBandLabel}
-                    </div>
-                  </div>
-                  <div className="text-2xl font-semibold tabular-nums text-slate-950 sm:text-xl">
-                    {row.stateProbabilityLabel}
-                  </div>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-white">
-                  <div
-                    className={`h-2 rounded-full ${chance.bar}`}
-                    style={{ width: `${row.stateProbability}%` }}
-                  />
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <ProbabilityStat
-                    label="Hold"
-                    value={row.holdProbabilityLabel}
-                  />
-                  <ProbabilityStat
-                    label="Improve"
-                    value={row.improveProbabilityLabel}
-                  />
-                  <ProbabilityStat
-                    label={row.rank > 18 ? "Pull-in" : "Scratch"}
-                    value={
-                      row.rank > 18
-                        ? row.expectedScratchOpenings.toFixed(1)
-                        : row.scratchProbabilityLabel
-                    }
-                  />
-                </div>
+              <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 sm:grid-cols-2">
+                <ReadPanel title="Point chance" read={score} />
+                <ReadPanel title="Drop chance" read={scratch} />
               </div>
+
+              {forecast ? (
+                <p className="mt-2 text-xs leading-5 text-slate-600">
+                  {forecast.basis}
+                </p>
+              ) : null}
               <p className="mt-3 text-sm leading-5 text-slate-600">
                 {row.recommendation}
               </p>
@@ -910,7 +952,7 @@ export function LastChancePanel({
         })}
         {!visibleRows.length ? (
           <div className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
-            No priorities in the current top 18 and bubble window.
+            No urgent items in the current state-field window.
           </div>
         ) : null}
       </div>
@@ -923,26 +965,25 @@ export function LastChancePanel({
       <div className="border-t border-slate-200">
         <div className="flex flex-col gap-1 p-4">
           <h3 className="text-sm font-semibold text-slate-950">
-            Predicted scratches
+            People who may drop this event
           </h3>
           <p className="text-sm text-slate-600">
-            Multi-event athletes most likely to skip a lower-priority state entry.
-            Distance calls compare the athlete&apos;s 800, 1600, and 3200 profile
-            before flagging a scratch.
+            Current entries with the strongest drop signal. Distance checks
+            compare the athlete&apos;s 800, 1600, and 3200 before flagging one.
           </p>
         </div>
         <div className="space-y-3 px-3 pb-3 md:hidden">
           {topScratchPredictions.map((row) => (
             <ScratchPredictionCard key={`${row.id}-mobile`} row={row} />
           ))}
-          {!scratchPredictions.length ? (
+          {!eventScratchPredictions.length ? (
             <div className="rounded-lg border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500">
-              No likely scratches detected from current multi-event state positions.
+              No one is likely to drop this event right now.
             </div>
           ) : null}
         </div>
         <div className="hidden overflow-x-auto md:block">
-          <table className="min-w-[900px] w-full table-fixed border-collapse text-left text-sm">
+          <table className="app-data-table min-w-[900px] table-fixed">
             <colgroup>
               <col className="w-[13%]" />
               <col className="w-[15%]" />
@@ -951,9 +992,9 @@ export function LastChancePanel({
               <col className="w-[13%]" />
               <col className="w-[23%]" />
             </colgroup>
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+            <thead>
               <tr>
-                <th className="px-3 py-3 font-semibold">Risk</th>
+                <th className="px-3 py-3 font-semibold">Read</th>
                 <th className="px-3 py-3 font-semibold">Event</th>
                 <th className="px-3 py-3 font-semibold">Athlete</th>
                 <th className="px-3 py-3 font-semibold">School</th>
@@ -965,16 +1006,10 @@ export function LastChancePanel({
               {topScratchPredictions.map((row) => (
                 <tr key={row.id} className="border-t border-slate-100">
                   <td className="px-3 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${scratchRiskClass(
-                        row.scratchProbability,
-                      )}`}
-                    >
-                      {row.scratchProbability}%
-                    </span>
-                    <div className="mt-1 text-xs text-slate-500">
-                      Range {row.confidenceIntervalLabel}
-                    </div>
+                    <ForecastBadge
+                      label={scratchPredictionRead(row).label}
+                      tone={scratchPredictionRead(row).tone}
+                    />
                   </td>
                   <td className="break-words px-3 py-3 font-medium text-slate-950">
                     {row.eventLabel}
@@ -989,11 +1024,10 @@ export function LastChancePanel({
                   </td>
                 </tr>
               ))}
-              {!scratchPredictions.length ? (
+              {!eventScratchPredictions.length ? (
                 <tr>
                   <td colSpan={6} className="px-3 py-8 text-center text-slate-500">
-                    No likely scratches detected from current multi-event state
-                    positions.
+                    No one is likely to drop this event right now.
                   </td>
                 </tr>
               ) : null}
@@ -1024,7 +1058,7 @@ export function LastChancePanel({
             ) : null}
           </div>
           <div className="hidden overflow-x-auto md:block">
-            <table className="min-w-[860px] w-full table-fixed border-collapse text-left text-sm">
+            <table className="app-data-table min-w-[860px] table-fixed">
               <colgroup>
                 <col className="w-[10%]" />
                 <col className="w-[24%]" />
@@ -1033,7 +1067,7 @@ export function LastChancePanel({
                 <col className="w-[14%]" />
                 <col className="w-[18%]" />
               </colgroup>
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead>
                 <tr>
                   <th className="px-3 py-3 font-semibold">Rank</th>
                   <th className="px-3 py-3 font-semibold">Athlete / Team</th>
@@ -1089,22 +1123,17 @@ export function LastChancePanel({
 }
 
 function ScratchPredictionCard({ row }: { row: ScratchPrediction }) {
+  const read = scratchPredictionRead(row);
+
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-            Scratch
+            Drop chance
           </div>
-          <span
-            className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${scratchRiskClass(
-              row.scratchProbability,
-            )}`}
-          >
-            {row.scratchProbability}%
-          </span>
-          <div className="mt-1 text-xs text-slate-500">
-            Range {row.confidenceIntervalLabel}
+          <div className="mt-1">
+            <ForecastBadge label={read.label} tone={read.tone} />
           </div>
         </div>
         <div className="min-w-0 text-right">
@@ -1126,6 +1155,9 @@ function ScratchPredictionCard({ row }: { row: ScratchPrediction }) {
         <div className="break-words text-sm text-slate-600">{row.school}</div>
       </div>
       <p className="mt-3 text-xs leading-5 text-slate-600">{row.reason}</p>
+      <p className="mt-2 text-xs font-semibold leading-5 text-slate-700">
+        {read.detail}
+      </p>
     </article>
   );
 }
@@ -1205,17 +1237,136 @@ function ForecastBadge({
   );
 }
 
-function ProbabilityStat({ label, value }: { label: string; value: string }) {
+function ReadPanel({ title, read }: { title: string; read: FriendlyRead }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-white/80 px-2.5 py-2 sm:block sm:text-center">
+    <div className="rounded-md bg-white p-2">
       <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-        {label}
+        {title}
       </div>
-      <div className="text-sm font-semibold tabular-nums text-slate-950 sm:mt-1">
-        {value}
+      <div className="mt-1">
+        <ForecastBadge label={read.label} tone={read.tone} />
       </div>
+      <p className="mt-2 text-xs leading-5 text-slate-600">{read.detail}</p>
     </div>
   );
+}
+
+function forecastScoreRead(entry: EventEntryForecastRow): FriendlyRead {
+  if (entry.rank <= 9 && entry.projectedEntryLabel !== "Scratch watch") {
+    return {
+      label: "Scores",
+      detail: `${entry.rankLabel} is in the scoring range if seed order holds.`,
+      tone: "emerald",
+    };
+  }
+
+  if (entry.rank <= 18) {
+    return {
+      label: "In field",
+      detail: "Currently in the state field.",
+      tone: entry.projectedEntryTone === "rose" ? "amber" : "sky",
+    };
+  }
+
+  return {
+    label: "Just outside",
+    detail: "Needs an opening or a better mark.",
+    tone: "amber",
+  };
+}
+
+function forecastScratchRead(entry: EventEntryForecastRow): FriendlyRead {
+  if (entry.projectedEntryLabel === "Scratch watch") {
+    return {
+      label: "May drop",
+      detail: entry.basis,
+      tone: "rose",
+    };
+  }
+
+  if (entry.projectedEntryLabel === "Coach call") {
+    return {
+      label: "Check",
+      detail: entry.basis,
+      tone: "amber",
+    };
+  }
+
+  return {
+    label: "Keep entered",
+    detail: entry.basis,
+    tone: "emerald",
+  };
+}
+
+function athleteEventScoreRead(
+  event: AthleteEventOutlook["events"][number],
+): FriendlyRead {
+  if (event.isScoring) {
+    return {
+      label: "Scores",
+      detail: `${event.rankLabel} is seeded for ${event.projectedPoints} state point${
+        event.projectedPoints === 1 ? "" : "s"
+      }.`,
+      tone: "emerald",
+    };
+  }
+
+  if (event.isQualified) {
+    return {
+      label: "In field",
+      detail: "Qualified for the state field, but outside scoring range from seed.",
+      tone: "sky",
+    };
+  }
+
+  if (event.statusLabel === "Bubble chase") {
+    return {
+      label: "Needs better mark",
+      detail: "Needs an opening or a better mark to enter the field.",
+      tone: "amber",
+    };
+  }
+
+  return {
+    label: "Long shot",
+    detail: "Needs a major mark update to enter the field.",
+    tone: "slate",
+  };
+}
+
+function athleteEventScratchRead(
+  event: AthleteEventOutlook["events"][number],
+): FriendlyRead {
+  if (event.netScratchCall === "Likely scratch" || event.scratchProbability >= 55) {
+    return {
+      label: "Likely drop",
+      detail: event.note,
+      tone: "rose",
+    };
+  }
+
+  if (event.netScratchCall === "Maybe scratch" || event.scratchProbability >= 35) {
+    return {
+      label: "May drop",
+      detail: event.note,
+      tone: "amber",
+    };
+  }
+
+  if (event.scratchProbability >= 18) {
+    return {
+      label: "Check",
+      detail: event.note,
+      tone: "amber",
+    };
+  }
+
+  return {
+    label: "Keep entered",
+    detail: event.note,
+    tone: "emerald",
+  };
 }
 
 function AthleteInspectButton({
@@ -1259,11 +1410,11 @@ function WeekendProbabilityDrawer({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-slate-950">
-            Weekend race probability
+            Weekend race checklist
           </span>
           <span className="mt-0.5 block text-xs text-slate-600">
-            {likelyCount} likely weekend racers from the top 18 plus bubble
-            watch list. Open for state, hold, improve, and scratch odds.
+            {likelyCount} entries need a weekend check. Open for the point and
+            drop read behind each row.
           </span>
         </span>
         <ChevronDown
@@ -1274,59 +1425,58 @@ function WeekendProbabilityDrawer({
       <div className="border-t border-slate-200 p-3">
         <div className="grid gap-3 lg:grid-cols-2">
           {rows.map((entry) => (
-            <article
+            <WeekendChecklistCard
               key={`${entry.id}-weekend-probability`}
-              className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold uppercase text-slate-500">
-                    {entry.rankLabel} · {entry.markRaw}
-                  </div>
-                  {entry.isRelay ? (
-                    <div className="mt-1 font-semibold text-slate-950">
-                      {entry.athleteName}
-                    </div>
-                  ) : (
-                    <AthleteInspectButton
-                      athleteName={entry.athleteName}
-                      onClick={() => onInspectEntry(entry)}
-                    />
-                  )}
-                  <div className="text-sm text-slate-600">{entry.school}</div>
-                </div>
-                <ForecastBadge
-                  label={entry.weekendRaceLabel}
-                  tone={entry.weekendRaceTone}
-                />
-              </div>
-
-              <div className="mt-3 grid gap-2 rounded-md bg-slate-50 p-2 sm:grid-cols-4">
-                <ProbabilityStat
-                  label="State"
-                  value={entry.stateProbabilityLabel}
-                />
-                <ProbabilityStat
-                  label="Hold"
-                  value={entry.holdProbabilityLabel}
-                />
-                <ProbabilityStat
-                  label="Improve"
-                  value={entry.improveProbabilityLabel}
-                />
-                <ProbabilityStat
-                  label="Scratch"
-                  value={entry.scratchProbabilityLabel}
-                />
-              </div>
-              <p className="mt-2 text-xs leading-5 text-slate-600">
-                {entry.basis}
-              </p>
-            </article>
+              entry={entry}
+              onInspectEntry={onInspectEntry}
+            />
           ))}
         </div>
       </div>
     </details>
+  );
+}
+
+function WeekendChecklistCard({
+  entry,
+  onInspectEntry,
+}: {
+  entry: EventEntryForecastRow;
+  onInspectEntry: (entry: EventEntryForecastRow) => void;
+}) {
+  const score = forecastScoreRead(entry);
+  const scratch = forecastScratchRead(entry);
+
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="text-xs font-semibold uppercase text-slate-500">
+            {entry.rankLabel} · {entry.markRaw}
+          </div>
+          {entry.isRelay ? (
+            <div className="mt-1 font-semibold text-slate-950">
+              {entry.athleteName}
+            </div>
+          ) : (
+            <AthleteInspectButton
+              athleteName={entry.athleteName}
+              onClick={() => onInspectEntry(entry)}
+            />
+          )}
+          <div className="text-sm text-slate-600">{entry.school}</div>
+        </div>
+        <ForecastBadge
+          label={entry.weekendRaceLabel}
+          tone={entry.weekendRaceTone}
+        />
+      </div>
+
+      <div className="mt-3 grid gap-2 rounded-md bg-slate-50 p-2 sm:grid-cols-2">
+        <ReadPanel title="Point chance" read={score} />
+        <ReadPanel title="Drop chance" read={scratch} />
+      </div>
+    </article>
   );
 }
 
@@ -1339,6 +1489,10 @@ function AthleteOutlookBubble({
   stVrainOpportunity?: StVrainStateMarkOpportunity;
   onClose: () => void;
 }) {
+  const stVrainReadout = stVrainOpportunity
+    ? stVrainRead(stVrainOpportunity)
+    : undefined;
+
   return (
     <div
       className="fixed inset-x-3 bottom-3 z-50 max-h-[82vh] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl md:inset-x-auto md:bottom-auto md:right-5 md:top-24 md:w-[460px]"
@@ -1389,7 +1543,7 @@ function AthleteOutlookBubble({
           </p>
         </section>
 
-        {stVrainOpportunity ? (
+        {stVrainOpportunity && stVrainReadout ? (
           <section className="rounded-lg border border-sky-200 bg-sky-50 p-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -1404,23 +1558,21 @@ function AthleteOutlookBubble({
                 </p>
               </div>
               <div className="shrink-0 text-left sm:text-right">
-                <div className="text-2xl font-semibold tabular-nums text-slate-950">
-                  {stVrainOpportunity.heatAdjustedChanceLabel}
-                </div>
-                <div className="text-[11px] font-semibold uppercase text-slate-500">
-                  state mark
-                </div>
+                <ForecastBadge
+                  label={stVrainReadout.label}
+                  tone={stVrainReadout.tone}
+                />
               </div>
             </div>
             <p className="mt-2 text-xs leading-5 text-slate-600">
-              {stVrainOpportunity.reason}
+              {stVrainReadout.detail} {stVrainOpportunity.reason}
             </p>
           </section>
         ) : null}
 
         <section className="rounded-lg border border-slate-200 p-3">
           <div className="text-sm font-semibold text-slate-950">
-            Scratch read
+            Drop chance
           </div>
           <p className="mt-1 text-sm leading-6 text-slate-700">
             {outlook.scratchWatchSummary}
@@ -1474,10 +1626,10 @@ function AthleteOutlookBubble({
                     </div>
                     <div>
                       <div className="text-base font-semibold tabular-nums text-slate-950">
-                        {relay.stateProbabilityLabel}
+                        {relay.callLabel}
                       </div>
                       <div className="text-[11px] font-semibold uppercase text-slate-500">
-                        Relay odds
+                        Relay read
                       </div>
                     </div>
                   </div>
@@ -1503,63 +1655,43 @@ function AthleteOutlookBubble({
             Events in this model
           </div>
           <div className="space-y-2">
-            {outlook.events.map((event) => (
-              <article
-                key={event.id}
-                className={`rounded-lg border p-3 ${
-                  event.isSelected
-                    ? "border-[#16324f] bg-[#f4f8fb]"
-                    : "border-slate-200 bg-white"
-                }`}
-              >
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="font-semibold text-slate-950">
-                      {event.eventLabel}
+            {outlook.events.map((event) => {
+              const score = athleteEventScoreRead(event);
+              const scratch = athleteEventScratchRead(event);
+
+              return (
+                <article
+                  key={event.id}
+                  className={`rounded-lg border p-3 ${
+                    event.isSelected
+                      ? "border-[#16324f] bg-[#f4f8fb]"
+                      : "border-slate-200 bg-white"
+                  }`}
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="font-semibold text-slate-950">
+                        {event.eventLabel}
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {event.rankLabel} · {event.markRaw}
+                      </div>
                     </div>
-                    <div className="mt-1 text-sm text-slate-600">
-                      {event.rankLabel} · {event.markRaw}
-                    </div>
+                    <span
+                      className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-semibold ${eventPillClass(
+                        event.statusLabel,
+                      )}`}
+                    >
+                      {event.statusLabel}
+                    </span>
                   </div>
-                  <span
-                    className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-semibold ${eventPillClass(
-                      event.statusLabel,
-                    )}`}
-                  >
-                    {event.statusLabel}
-                  </span>
-                </div>
-                <div className="mt-3 grid gap-2 rounded-md bg-slate-50 p-2 text-center sm:grid-cols-3">
-                  <div>
-                    <div className="text-base font-semibold tabular-nums text-slate-950">
-                      {event.stateProbabilityLabel}
-                    </div>
-                    <div className="text-[11px] font-semibold uppercase text-slate-500">
-                      State
-                    </div>
+                  <div className="mt-3 grid gap-2 rounded-md bg-slate-50 p-2 sm:grid-cols-2">
+                    <ReadPanel title="Point chance" read={score} />
+                    <ReadPanel title="Drop chance" read={scratch} />
                   </div>
-                  <div>
-                    <div className="text-base font-semibold tabular-nums text-slate-950">
-                      {event.holdProbabilityLabel}
-                    </div>
-                    <div className="text-[11px] font-semibold uppercase text-slate-500">
-                      Hold
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-base font-semibold tabular-nums text-slate-950">
-                      {event.scratchProbabilityLabel}
-                    </div>
-                    <div className="text-[11px] font-semibold uppercase text-slate-500">
-                      Scratch
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-slate-600">
-                  {event.note}
-                </p>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </section>
       </div>

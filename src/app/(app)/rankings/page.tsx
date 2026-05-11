@@ -1,14 +1,20 @@
 import { cookies } from "next/headers";
 import { ClassificationSelector } from "@/components/ClassificationSelector";
 import { FocusTeamSelector } from "@/components/FocusTeamSelector";
+import { SimpleSteps } from "@/components/AppPrimitives";
 import { PageHeader } from "@/components/PageHeader";
 import { RankingLinks } from "@/components/RankingLinks";
-import { currentMileSplitSeedMetadata } from "@/lib/data/currentPerformances.generated";
 import {
-  getPerformancesForClassification,
+  getLatestVerifiedMeetDateForClassification,
+  getLastChanceDashboardForTeam,
   getRankingsForClassification,
   getSchoolOptionsForClassification,
 } from "@/lib/services/appData";
+import {
+  currentAthleticLiveLastChanceMetadata,
+  currentMileSplitSeedMetadata,
+  maxPrepsMetadataByClassification,
+} from "@/lib/data/rankingSourceMetadata";
 import {
   DEFAULT_FOCUS_TEAM,
   decodeFocusTeamCookie,
@@ -35,6 +41,15 @@ function formatDate(value: string) {
   }).format(new Date(`${value}T12:00:00-06:00`));
 }
 
+function latestTimestamp(values: Array<string | undefined>) {
+  const timestamps = values.filter((value): value is string => Boolean(value));
+  return (
+    timestamps.sort(
+      (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+    )[0] ?? new Date(0).toISOString()
+  );
+}
+
 export default async function RankingsPage({
   searchParams,
 }: {
@@ -46,31 +61,32 @@ export default async function RankingsPage({
   const savedFocusTeam = decodeFocusTeamCookie(
     cookieStore.get(focusTeamCookieName(classification))?.value,
   );
-  const scopedPerformances = getPerformancesForClassification(classification);
-  const schoolOptions = getSchoolOptionsForClassification(classification);
+  const [latestMeetDate, schoolOptions, rankings] = await Promise.all([
+    getLatestVerifiedMeetDateForClassification(classification),
+    getSchoolOptionsForClassification(classification),
+    getRankingsForClassification(classification),
+  ]);
   const focusTeam = resolveFocusTeam(
     resolvedSearchParams.team ?? savedFocusTeam,
     schoolOptions,
     DEFAULT_FOCUS_TEAM,
   );
-  const rankings = getRankingsForClassification(classification);
-  const latestMeetDate =
-    scopedPerformances
-      .filter(
-        (performance) =>
-          performance.verificationStatus === "verified",
-      )
-      .reduce<string | undefined>(
-        (latest, performance) =>
-          !latest || performance.meetDate > latest ? performance.meetDate : latest,
-        undefined,
-      ) ?? "";
-
+  const dashboard = await getLastChanceDashboardForTeam(classification, focusTeam);
+  const maxPrepsMetadata = maxPrepsMetadataByClassification[classification];
+  const latestRefresh = latestTimestamp([
+    currentMileSplitSeedMetadata.generatedAt,
+    currentAthleticLiveLastChanceMetadata.generatedAt,
+    maxPrepsMetadata?.generatedAt,
+  ]);
+  const sourceErrorCount =
+    currentMileSplitSeedMetadata.sourceErrors.length +
+    currentAthleticLiveLastChanceMetadata.sourceErrors.length +
+    (maxPrepsMetadata?.sourceErrors.length ?? 0);
   return (
     <div>
       <PageHeader
-        title="Top 18 Cutoff Board"
-        description={`Open one ${classification} event, check the top 18, then move to the next event without losing the saved school view.`}
+        title="Who Is In?"
+        description={`Pick an event to see who is in, who is just outside, and where ${focusTeam} stands.`}
         actions={
           <>
             <ClassificationSelector currentClassification={classification} />
@@ -78,35 +94,51 @@ export default async function RankingsPage({
               schools={schoolOptions}
               currentTeam={focusTeam}
               classification={classification}
-              label={`${classification} team`}
+              label="Team"
             />
           </>
         }
       />
-      <section className="mb-4 grid gap-3 rounded-xl border border-[#d8e2ea] bg-white p-3 shadow-sm md:grid-cols-3">
+      <SimpleSteps
+        steps={[
+          {
+            title: "Pick an event",
+            detail: "Use the event list below.",
+          },
+          {
+            title: "Find your team",
+            detail: "The saved team row shows your marks.",
+          },
+          {
+            title: "Open details",
+            detail: "Use the main button for the full list.",
+          },
+        ]}
+      />
+      <section className="mb-4 grid gap-3 rounded-lg border border-[#d8e2ea] bg-white p-3 shadow-sm md:grid-cols-3">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Data refresh
+          <div className="text-[11px] font-semibold uppercase tracking-normal text-slate-500">
+            Last update
           </div>
           <div className="mt-1 text-sm font-semibold text-slate-950">
-            {formatDenverDateTime(currentMileSplitSeedMetadata.generatedAt)} MT
+            {formatDenverDateTime(latestRefresh)} MT
           </div>
         </div>
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Latest verified meet date
+          <div className="text-[11px] font-semibold uppercase tracking-normal text-slate-500">
+            Newest meet
           </div>
           <div className="mt-1 text-sm font-semibold text-slate-950">
             {latestMeetDate ? formatDate(latestMeetDate) : "No verified marks"}
           </div>
         </div>
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Public-source check
+          <div className="text-[11px] font-semibold uppercase tracking-normal text-slate-500">
+            Data check
           </div>
           <div className="mt-1 text-sm font-semibold text-slate-950">
-            {currentMileSplitSeedMetadata.sourceErrors.length
-              ? `${currentMileSplitSeedMetadata.sourceErrors.length} source flags`
+            {sourceErrorCount
+              ? `${sourceErrorCount} source flags`
               : "No source errors"}
           </div>
         </div>
@@ -115,6 +147,7 @@ export default async function RankingsPage({
         rankings={rankings}
         focusTeam={focusTeam}
         classification={classification}
+        scratchPredictions={dashboard.scratchPredictions}
       />
     </div>
   );
